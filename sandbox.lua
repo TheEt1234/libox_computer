@@ -5,20 +5,12 @@
         - executing
         - environment
         - yield behaviour
-        ]]
+
+]]
 
 local api = {}
 
-local settings = {
-    time_limit = 3000,             -- 3 miliseconds
-    min_delay = 1 / (mesecon.setting("overheat_max", 20) - 2),
-    size_limit = 1024 * 1024 * 10, -- 10 *megabytes*
-    chan_maxlen = 256,
-    maxlen = 1024 * 5,             -- 50 kilobytes
-    heat_max = mesecon.setting("overheat_max", 20),
-    cooldown_time = mesecon.setting("cooldown_time", 2.0),
-    cooldown_step = mesecon.setting("cooldown_granularity", 0.5)
-}
+local settings = libox_computer.settings
 
 api.raw_print = function(meta, text)
     local old_text = meta:get_string("term_text")
@@ -41,7 +33,8 @@ local function get_digiline_send(pos)
             elseif (type(channel) ~= "string" and type(channel) ~= "number" and type(channel) ~= "boolean") then
                 return "Channel must be string, number or boolean."
             end
-            local msg, msg_cost = libox.digiline_sanitize(msg)
+            local msg, msg_cost = libox.digiline_sanitize(msg, settings.allow_functions_in_digiline_messages,
+                libox_computer.wrap)
             if msg == nil or msg_cost > settings.maxlen then
                 return "Too complex or contained invalid data"
             end
@@ -74,18 +67,34 @@ function api.create_environment(pos)
     meta:set_string("term_text", "")
     local add = {
         pos = vector.copy(pos),
-        yield = coroutine.yield,
+        yield = coroutine.yield, -- maybe allow coroutine creation?
         print = libox.sandbox_lib_f(get_print(meta)),
         clearterm = libox.sandbox_lib_f(get_clearterm(meta)),
         settings = table.copy(settings),
         digiline_send = libox.sandbox_lib_f(get_digiline_send(pos)),
         heat = mesecon.get_heat(pos),
+        color_laptop = libox.sandbox_lib_f(function(n)
+            if type(n) ~= "number" then return false end
+            if n < 1 then return false end
+            if n > 16 then return false end
+            n = math.floor(n)
+            n = n * 2 -- yeah, TODO: MOAR COLORZ!!
+            local node = minetest.get_node(pos)
+            local param2 = node.param2
+            local rot = param2 % 4
+            -- so if division by 4 yields the pallete index then...
+            local pallete_index = n * 4
+            -- and we just... set the node
+            node.param2 = math.floor(rot + pallete_index)
+            minetest.swap_node(pos, node)
+        end),
+        gui = libox.sandbox_lib_f(libox_computer.touchscreen_protocol.get_touchscreen_ui(meta))
     }
     for k, v in pairs(add) do base[k] = v end
     return base
 end
 
-function api.create_sandbox(pos) -- position, not meta, because create_environment depends on pos
+function api.create_sandbox(pos) -- position, not meta, because create_environment depends on pos to get things like heat and.. the position
     local meta = minetest.get_meta(pos)
     meta:set_string("errmsg", "")
     local code = meta:get_string("code")
@@ -169,24 +178,34 @@ function api.run_sandbox(pos, event)
     end
 end
 
+local delay = 20 -- if 20 seconds pass you can create another sandbox
 function api.wake_up_and_run(pos, event)
     local meta = minetest.get_meta(pos)
     local id = meta:get_string("ID")
-    if libox.coroutine.is_sandbox_dead(id) then
+    local creation_time = meta:get_int("creation_time") or -delay
+
+    local is_dead = libox.coroutine.is_sandbox_dead(id)
+    local creation_time_check_success = creation_time < (os.clock() - 20)
+    if is_dead and creation_time_check_success then
+        meta:set_int("creation_time", os.clock())
         api.create_sandbox(pos)
+    end
+    if (not creation_time_check_success) and (not is_dead) then
+        return api.report_error(meta,
+            "Sandbox ratelimit reached, retry later (" .. delay .. " second limit).")
     end
     return api.run_sandbox(pos, event)
 end
 
 mesecon.queue:add_function("lb_wait", function(pos, id)
-    if libox.coroutine.active_sandboxes[id] == nil then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
+    if libox.coroutine.is_sandbox_dead(id) then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
     api.run_sandbox(pos, {
         type = "wait"
     })
 end)
 
 mesecon.queue:add_function("lb_await", function(pos, id)
-    if libox.coroutine.active_sandboxes[id] == nil then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
+    if libox.coroutine.is_sandbox_dead(id) then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
     api.run_sandbox(pos, {
         type = "await"
     })
@@ -194,7 +213,7 @@ end)
 
 mesecon.queue:add_function("lb_digiline_relay", function(pos, channel, msg)
     local id = minetest.get_meta(pos):get_string("ID")
-    if libox.coroutine.active_sandboxes[id] == nil then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
+    if libox.coroutine.is_sandbox_dead(id) then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
     digilines.receptor_send(pos, digiline.rules.default, channel, msg)
 end)
 
