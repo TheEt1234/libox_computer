@@ -14,3 +14,12 @@ Code - LGPLv3
 Textures 
 - laptop_ui_bg.png laptop_ui_run.png - CC-BY-SA 3.0 [luacontroller textures here!](https://github.com/minetest-mods/mesecons/tree/master/mesecons_luacontroller/textures)
 - touchscreen_protocol.lua - LGPLv3 - [mt-mods's digistuff](https://github.com/mt-mods/digistuff/tree/master)
+
+# Todos
+- mesecons_debug support
+- help page
+- better docs (documentation of basic libox functions)
+- drop the unifieddyes dependancy
+- add a texture for the tool
+- more environment stuffs maybe?
+- T E S T S

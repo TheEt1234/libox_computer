@@ -73,9 +73,10 @@ function api.create_environment(pos)
         settings = table.copy(settings),
         digiline_send = libox.sandbox_lib_f(get_digiline_send(pos)),
         heat = mesecon.get_heat(pos),
+        heat_max = settings.heat_max,
         color_laptop = libox.sandbox_lib_f(function(n)
             if type(n) ~= "number" then return false end
-            if n < 1 then return false end
+            if n < 0 then return false end
             if n > 16 then return false end
             n = math.floor(n)
             n = n * 2 -- yeah, TODO: MOAR COLORZ!!
@@ -120,11 +121,7 @@ function api.run_sandbox(pos, event)
     local is_waiting = (meta:get_int("is_waiting") == 1) or false
 
     if is_waiting then -- ignore events when waiting
-        if type(event) == "table" and event.type and event.type == "wait" then
-            meta:set_int("is_waiting", 0)
-        else
-            return
-        end
+        return
     end
 
     if mesecon.do_overheat(pos) then
@@ -199,6 +196,7 @@ end
 
 mesecon.queue:add_function("lb_wait", function(pos, id)
     if libox.coroutine.is_sandbox_dead(id) then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
+    minetest.get_meta(pos):set_int("is_waiting", 0)
     api.run_sandbox(pos, {
         type = "wait"
     })
