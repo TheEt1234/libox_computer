@@ -77,9 +77,8 @@ function api.create_environment(pos)
         color_laptop = libox.sandbox_lib_f(function(n)
             if type(n) ~= "number" then return false end
             if n < 0 then return false end
-            if n > 16 then return false end
+            if n > 64 then return false end -- 64 COLORZ!!! can you bolivia that
             n = math.floor(n)
-            n = n * 2 -- yeah, TODO: MOAR COLORZ!!
             local node = minetest.get_node(pos)
             local param2 = node.param2
             local rot = param2 % 4
@@ -175,19 +174,19 @@ function api.run_sandbox(pos, event)
     end
 end
 
-local delay = 20 -- if 20 seconds pass you can create another sandbox
+local delay = settings.sandbox_delay -- if 5 seconds pass you can create another sandbox
 function api.wake_up_and_run(pos, event)
     local meta = minetest.get_meta(pos)
     local id = meta:get_string("ID")
     local creation_time = meta:get_int("creation_time") or -delay
 
     local is_dead = libox.coroutine.is_sandbox_dead(id)
-    local creation_time_check_success = creation_time < (os.clock() - 20)
+    local creation_time_check_success = creation_time < (os.clock() - delay)
     if is_dead and creation_time_check_success then
         meta:set_int("creation_time", os.clock())
         api.create_sandbox(pos)
     end
-    if (not creation_time_check_success) and (not is_dead) then
+    if (not creation_time_check_success) and is_dead then
         return api.report_error(meta,
             "Sandbox ratelimit reached, retry later (" .. delay .. " second limit).")
     end

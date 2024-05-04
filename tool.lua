@@ -21,7 +21,7 @@ minetest.register_craftitem("libox_computer:programmer", {
     description = "Laptop programmer\n" ..
         minetest.colorize("#777777", "All it currently does is reset the laptop to the editor ui"),
     short_description = "Laptop programmer",
-    inventory_image = "",
+    inventory_image = "laptop_tool.png",
     stack_max = 1,
     range = 10,
     light_source = 14,

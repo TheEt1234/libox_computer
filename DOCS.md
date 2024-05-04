@@ -118,11 +118,9 @@ also, the `hide_gui` element name is special, as it will... hide the gui (switch
 
 # color_laptop(n)
 - returns false if unsuccessful
-- `n` is a number above 0, and less than 16
+- `n` is a number above 0, and less than 64
 - it colors the laptop based on the number
-- "What color is what number" great question... that is an excercise for the viewer......
-- TODO: trivially pack 2x more colors into this
-
+- The colors are based off of the pallete defined in textures/laptop_palette.png 
 # Other stuff
 `pos` - position  
 `settings` - the settings table  

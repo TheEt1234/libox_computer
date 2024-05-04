@@ -47,19 +47,23 @@ local function on_receive_fields(pos, _, fields, sender)
 
     local meta = minetest.get_meta(pos)
     local ts_ui = meta:get_int("ts_ui")
-    if ts_ui == 1 then
+    if ts_ui == 0 then
         if fields.tab then
             meta:set_int("tab", fields.tab)
             ui(meta)
         elseif fields.program then
-            meta:set_int("ts_ui", 0)
-            meta:set_string("code", fields.code)
             -- problem, what happens to the previous sandbox
             -- well it gets deleted we dont make garbage here
             libox.coroutine.active_sandboxes[meta:get_string("ID")] = nil
+            meta:set_string("ID", "AAAAAAAAAA")
+            meta:set_string("errmsg", "")
+            meta:set_int("ts_ui", 0)
+            meta:set_string("code", fields.code)
+
 
             libox_computer.sandbox.create_sandbox(pos)
             libox_computer.sandbox.run_sandbox(pos)
+            ui(meta)
         elseif fields.terminal_clear then
             meta:set_string("term_text", "")
             ui(meta)
@@ -68,13 +72,13 @@ local function on_receive_fields(pos, _, fields, sender)
                 type = "terminal",
                 msg = fields.terminal_input
             })
-        elseif fields.stop then
+        elseif fields.halt then
             libox.coroutine.active_sandboxes[meta:get_string("ID")] = nil
         elseif fields.show_gui then
             meta:set_int("ts_ui", 1)
             libox_computer.touchscreen_protocol.update_formspec(meta, minetest.deserialize(meta:get_string("data"), true))
         end
-    elseif ts_ui == 0 then
+    elseif ts_ui == 1 then
         if fields.hide_gui then
             meta:set_int("ts_ui", 0)
             ui(meta)

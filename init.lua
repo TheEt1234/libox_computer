@@ -1,17 +1,23 @@
+local settings = minetest.settings
 libox_computer = {
     basename = "libox_computer:laptop",
     settings = {
-        time_limit = 3000,             -- 3 miliseconds
+        time_limit = tonumber(settings:get("libox_computer_time_limit")) or 3000, -- 3 miliseconds
         min_delay = 1 / (mesecon.setting("overheat_max", 20) - 2),
-        size_limit = 1024 * 1024 * 10, -- 10 *megabytes*
+        size_limit = (1024 * 1024 * 10),                                          -- 10 *megabytes*
         chan_maxlen = 256,
-        maxlen = 1024 * 5,             -- 50 kilobytes
+        maxlen = 1024 * 5,                                                        -- 50 kilobytes
         heat_max = mesecon.setting("overheat_max", 20),
         cooldown_time = mesecon.setting("cooldown_time", 2.0),
         cooldown_step = mesecon.setting("cooldown_granularity", 0.5),
-        allow_functions_in_digiline_messages = false
+        allow_functions_in_digiline_messages = settings:get("libox_computer_allow_functions") or false,
+        sandbox_delay = settings:get_bool("libox_computer_sandbox_delay") or 5,
     }
 }
+
+if tonumber(settings:get("libox_computer_size_limit")) then
+    libox_computer.settings.size_limit = 1024 * 1024 * tonumber(settings:get("libox_computer_size_limit"))
+end
 
 function libox_computer.wrap(f)
     setfenv(f, {}) -- make the function have to import its environment
@@ -31,12 +37,7 @@ local nodebox = {
     }
 }
 
-local palette
-if minetest.global_exists("unifieddyes") then
-    palette = "unifieddyes_palette_colorwallmounted.png"
-else
-    palette = "^[colorize:252D9E"
-end
+
 minetest.register_node(libox_computer.basename, {
     drawtype = "nodebox",
     tiles = {
@@ -48,7 +49,7 @@ minetest.register_node(libox_computer.basename, {
         "laptop_side2.png",
         "laptop_side1.png",
     },
-    palette = palette,
+    palette = "laptop_palette.png",
     paramtype = "light",
     light_source = minetest.LIGHT_MAX,
     paramtype2 = "color4dir",

@@ -1,0 +1,10 @@
+# The time limit for the sandbox, in microseconds
+libox_computer_time_limit (Time limit, in microseconds) int 3000
+
+# The size limit of the sandbox's environment, local variables and upvalues, if libox is trusted, in megabytes
+libox_computer_size_limit (Size limit, in megabytes) int 5
+
+# They also get rid of their environment, and cannot be exported to luacontrollers
+libox_computer_allow_functions (Allow functions in digilines) bool false
+
+libox_computer_sandbox_delay (Delay between sandbox activation, in seconds) int 5
