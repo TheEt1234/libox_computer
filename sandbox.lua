@@ -70,13 +70,19 @@ function api.create_environment(pos)
     meta:set_string("term_text", "")
     local add = {
         pos = vector.copy(pos),
-        yield = coroutine.yield, -- maybe allow coroutine creation?
+
+        yield = coroutine.yield,
+
         print = libox.sandbox_lib_f(get_print(meta)),
         clearterm = libox.sandbox_lib_f(get_clearterm(meta)),
+
         settings = table.copy(settings),
+
         digiline_send = libox.sandbox_lib_f(get_digiline_send(pos)),
+
         heat = mesecon.get_heat(pos),
         heat_max = settings.heat_max,
+
         color_laptop = libox.sandbox_lib_f(function(n)
             if type(n) ~= "number" then return false end
             if n < 0 then return false end
@@ -91,8 +97,31 @@ function api.create_environment(pos)
             node.param2 = math.floor(rot + pallete_index)
             minetest.swap_node(pos, node)
         end),
+
         gui = libox.sandbox_lib_f(libox_computer.touchscreen_protocol.get_touchscreen_ui(meta)),
+
+        code = meta:get_string("code"),
         mem = mem,
+
+        coroutine = {
+            create = coroutine.create,
+            resume = function(co, ...)
+                --[[
+                THIS USES RAW PCALL..... AAND CALLS STUFF FROM THE USER
+                so we need to be very careful
+                and by that i mean we can't use sandbox_lib_f because that will allow the user to (""):rep(math.huge)
+                ]]
+                local retvalue = {
+                    coroutine.resume(co, ...)
+                }
+                if not debug.gethook() then
+                    error("Code timed out! (from coroutine.resume)", 2)
+                end
+                return retvalue
+            end,
+            status = coroutine.status,
+            yield = coroutine.yield,
+        },
     }
     for k, v in pairs(add) do base[k] = v end
     return base
@@ -116,16 +145,12 @@ function api.create_sandbox(pos) -- position, not meta, because create_environme
 end
 
 local function remove_functions(obj)
-    local tp = type(obj)
-    if tp == "function" then
-        return nil
-    end
-    if tp == "userdata" then
-        return nil
-    end
-
     local function is_bad(x)
         return type(x) == "function" or type(x) == "userdata" or type(x) == "thread"
+    end
+
+    if is_bad(obj) then
+        return nil
     end
 
     -- Make sure to not serialize the same table multiple times, otherwise

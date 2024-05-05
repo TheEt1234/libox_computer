@@ -8,7 +8,6 @@
 -- also, new command
 -- {command = "formspec", rawtext = "label[blabla]"}
 
-libox_computer.touchscreen_protocol = {}
 
 -- `minetest.formspec_escape` with option to not escape commas
 local function fs_escape(text, is_list)
@@ -614,13 +613,14 @@ local function on_receive_fields(pos, _, fields, player)
     })
 end
 
--- expose the touchscreen protocol to _G.libox_computer
-libox_computer.touchscreen_protocol.formspec_elements = formspec_elements
-libox_computer.touchscreen_protocol.create_element_string = create_element_string
-libox_computer.touchscreen_protocol.modify_element_string = modify_element_string
-libox_computer.touchscreen_protocol.check_old_command = check_old_command
-libox_computer.touchscreen_protocol.process_command = process_command
-libox_computer.touchscreen_protocol.get_touchscreen_ui = get_touchscreen_ui
-libox_computer.touchscreen_protocol.on_gui_receive_fields = on_receive_fields
-libox_computer.touchscreen_protocol.get_touchscreen_ui = get_touchscreen_ui
-libox_computer.touchscreen_protocol.update_formspec = update_formspec
+-- expose the touchscreen protocol insides
+libox_computer.touchscreen_protocol = {
+    formspec_elements = formspec_elements,
+    create_element_string = create_element_string,
+    modify_element_string = modify_element_string,
+    check_old_command = check_old_command,
+    process_command = process_command,
+    get_touchscreen_ui = get_touchscreen_ui,
+    on_gui_receive_fields = on_receive_fields,
+    update_formspec = update_formspec,
+}

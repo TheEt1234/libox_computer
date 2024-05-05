@@ -25,7 +25,7 @@ function libox_computer.wrap(f)
 end
 
 local MP = minetest.get_modpath(minetest.get_current_modname())
-dofile(MP .. "/touchscreen_protocol.lua") -- insanely bloated... normal formspecs rule but whatever
+dofile(MP .. "/touchscreen_protocol.lua")
 dofile(MP .. "/sandbox.lua")
 dofile(MP .. "/frontend.lua")
 
@@ -74,11 +74,11 @@ minetest.register_node(libox_computer.basename, {
             action = function(pos, _, channel, msg)
                 local msg, _cost = libox.digiline_sanitize(msg,
                     libox_computer.settings.allow_functions_in_digiline_messages, libox_computer.wrap)
-                libox_computer.sandbox.run_sandbox(pos, {
+                libox_computer.sandbox.wake_up_and_run(pos, {
                     type = "digiline",
                     channel = channel,
                     msg = msg
-                })
+                }) -- digilines wake the sandbox up now... yes
             end
         }
     }

@@ -1,4 +1,4 @@
-# hey this is a little different than the luacontroller
+# so this is a little different than the luacontroller
 
 So, yeah, what the title says it's not just a luacontroller with a touchscreen attached on it....
 
@@ -10,7 +10,7 @@ so in a **luacontroller** you do something like this:
 
 ```lua
     if event.type == "digiline" then
-        print("h")
+        print("hello world")
     end
 ```
 
@@ -19,7 +19,7 @@ but in a **libox computer**:
     repeat
         local event = yield()
         if event.type=="digiline" then
-            print("h")
+            print("hello world")
         end
     until false -- infinite loop
 ```
@@ -30,7 +30,7 @@ but in a **libox computer**:
 ```lua
     if event.type=="interrupt" or event.type=="program" then
         interrupt(1, "iid")
-        print("h")
+        print("hello world")
     end
 ```
 
@@ -38,8 +38,8 @@ and here in a **libox computer**:
 
 ```lua
     repeat
-        yield(1)
-        print("h")
+        yield(1) -- this waits, ignores all events incoming
+        print("hello world")
     until false
 ```
 
@@ -50,7 +50,7 @@ theese yields can also be done in any other loops
 ***Also, yield waits aren't done lightweight-ly, they are done using mesecon queue***
 
 # Environment
-- standard libox environment (see with `print(_G)`)
+- [standard libox environment](https://github.com/TheEt1234/libox/blob/master/env_docs.md) with additions, those are described here
 
 ## `yield(command)`
 when ran without arguments, it waits for an event and returns it
@@ -120,14 +120,23 @@ in the meantime you can like... `yield(5)` or something idk up to you
 - oh yeah the input... if you `yield()` you can receive the `terminal` event, where its `msg` is the terminal message
 
 # color_laptop(n)
+
 - returns false if unsuccessful
 - `n` is a number above 0, and less than 64
 - it colors the laptop based on the number
 - The colors are based off of the pallete defined in textures/laptop_palette.png 
+
 # Other stuff
 `pos` - position  
 `settings` - the settings table  
 
-`digiline_send(channel, msg)` - luacontroller `digiline_send(channel, msg)` but returns an error message if its not successful, and also may be configured to allow functions (that have their environment get exterminated though)  
+`digiline_send(channel, msg)` - luacontroller's implementation but returns an error message if its not successful, and also may be configured to allow functions (that have their environment get exterminated though)  
 
 `heat` `heat_max` - see luacontroller's `heat` and `heat_max`, if `heat` reaches above `heat_max` the libox computer will overheat
+
+`mem` - persistant storage (across sandbox restarts/server restarts/whatever), cannot store threads, functions or userdata
+
+# Coroutine library (coroutine.*)
+- create - unchanged
+- resume - Changed in the style of libox pcall
+- yield - unchanged, same yield as in _G

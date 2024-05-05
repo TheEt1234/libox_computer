@@ -26,10 +26,6 @@ Textures
 
 # Todos (not in order)
 
-- persistant variable storage (with validation so stuff like C functions or threads or userdata can't make it in)
-- help page
-- better docs (documentation of basic libox functions)
-- better everything™
 - more environment stuffs maybe?
 - T E S T S
-- maybe robots? i mean yeah sure lets just be a total lwcomputers clone
+- maybe robots?

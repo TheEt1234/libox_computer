@@ -33,8 +33,8 @@ local function ui(meta)
                 .. "button[12.75,10.85;2,1;terminal_clear;Clear]"
                 .. "field_close_on_enter[terminal_input;false]"
         elseif tab == 3 then
-            --Help tab
-            --fs = fs .. mooncontroller.lc_docs.generate_help_formspec(meta:get_int("help_selidx"))
+            fs = fs ..
+                "textarea[0.25,0.6;14.5,9.05;;;See https://github.com/TheEt1234/libox_computer/blob/master/DOCS.md]"
         end
         meta:set_string("formspec", fs)
         meta:set_string("errmsg", "")
