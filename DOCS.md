@@ -109,7 +109,10 @@ also formspecs can be more powerful than touchscreen elements
 
 when someone clicks on something it will send a `gui` event, where `fields` are the formspec fields, it also includes a `clicker` in the fields
 
-also, the `hide_gui` element name is special, as it will... hide the gui (switching to the editor) when triggered
+also, the `hide_gui` element name is special, as it will... hide the gui (switching to the editor) when triggered  
+
+aaalso.... there is a gui action limit to prevent the laptop from overheating... currently hardcoded to be at `heat_max - 2`
+in the meantime you can like... `yield(5)` or something idk up to you
 
 # terminal I/O
 - basically the standard mooncontroller terminal I/O

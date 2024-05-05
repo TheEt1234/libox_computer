@@ -4,6 +4,8 @@ local function ui(meta)
     local code = escape(meta:get_string("code"))
     local errmsg = escape(meta:get_string("errmsg"))
     if (errmsg ~= "" and errmsg ~= nil) or (meta:get_int("ts_ui") == 0) then
+        if (errmsg ~= "" and errmsg ~= nil) then meta:set_int("ts_ui", 0) end
+
         local tab = meta:get_int("tab")
         if tab < 1 or tab > 4 then tab = 1 end
 
@@ -35,19 +37,22 @@ local function ui(meta)
             --fs = fs .. mooncontroller.lc_docs.generate_help_formspec(meta:get_int("help_selidx"))
         end
         meta:set_string("formspec", fs)
+        meta:set_string("errmsg", "")
     end
 end
 
 local function on_receive_fields(pos, _, fields, sender)
     local name = sender:get_player_name()
-    if minetest.is_protected(pos, name) and not minetest.check_player_privs(name, { protection_bypass = true }) then
-        minetest.record_protection_violation(pos, name)
-        return
-    end
+
 
     local meta = minetest.get_meta(pos)
     local ts_ui = meta:get_int("ts_ui")
     if ts_ui == 0 then
+        if minetest.is_protected(pos, name) and not minetest.check_player_privs(name, { protection_bypass = true }) then
+            minetest.record_protection_violation(pos, name)
+            return
+        end
+
         if fields.tab then
             meta:set_int("tab", fields.tab)
             ui(meta)
@@ -74,6 +79,7 @@ local function on_receive_fields(pos, _, fields, sender)
             })
         elseif fields.halt then
             libox.coroutine.active_sandboxes[meta:get_string("ID")] = nil
+            ui(meta)
         elseif fields.show_gui then
             meta:set_int("ts_ui", 1)
             libox_computer.touchscreen_protocol.update_formspec(meta, minetest.deserialize(meta:get_string("data"), true))
@@ -83,7 +89,9 @@ local function on_receive_fields(pos, _, fields, sender)
             meta:set_int("ts_ui", 0)
             ui(meta)
         end
-        libox_computer.touchscreen_protocol.on_gui_receive_fields(pos, _, fields, sender)
+        if mesecon.get_heat(pos) < (libox_computer.settings.heat_max - 2) then -- this gives you time to wait or something idk
+            libox_computer.touchscreen_protocol.on_gui_receive_fields(pos, _, fields, sender)
+        end
     end
 end
 

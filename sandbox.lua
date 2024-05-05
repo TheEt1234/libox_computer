@@ -61,9 +61,12 @@ local function get_clearterm(meta)
 end
 
 
+
+
 function api.create_environment(pos)
     local base = libox.create_basic_environment()
     local meta = minetest.get_meta(pos)
+    local mem = minetest.deserialize(meta:get_string("mem") or "") or {}
     meta:set_string("term_text", "")
     local add = {
         pos = vector.copy(pos),
@@ -77,7 +80,7 @@ function api.create_environment(pos)
         color_laptop = libox.sandbox_lib_f(function(n)
             if type(n) ~= "number" then return false end
             if n < 0 then return false end
-            if n > 64 then return false end -- 64 COLORZ!!! can you bolivia that
+            if n > 64 then return false end -- 64 COLORZ!!!
             n = math.floor(n)
             local node = minetest.get_node(pos)
             local param2 = node.param2
@@ -88,7 +91,8 @@ function api.create_environment(pos)
             node.param2 = math.floor(rot + pallete_index)
             minetest.swap_node(pos, node)
         end),
-        gui = libox.sandbox_lib_f(libox_computer.touchscreen_protocol.get_touchscreen_ui(meta))
+        gui = libox.sandbox_lib_f(libox_computer.touchscreen_protocol.get_touchscreen_ui(meta)),
+        mem = mem,
     }
     for k, v in pairs(add) do base[k] = v end
     return base
@@ -111,6 +115,56 @@ function api.create_sandbox(pos) -- position, not meta, because create_environme
     meta:set_int("is_waiting", 0)
 end
 
+local function remove_functions(obj)
+    local tp = type(obj)
+    if tp == "function" then
+        return nil
+    end
+    if tp == "userdata" then
+        return nil
+    end
+
+    local function is_bad(x)
+        return type(x) == "function" or type(x) == "userdata" or type(x) == "thread"
+    end
+
+    -- Make sure to not serialize the same table multiple times, otherwise
+    -- writing mem.test = mem in the Luacontroller will lead to infinite recursion
+    local seen = {}
+
+    local function rfuncs(x)
+        if x == nil then return end
+        if seen[x] then return end
+        seen[x] = true
+        if type(x) ~= "table" then return end
+
+        for key, value in pairs(x) do
+            if is_bad(key) or is_bad(value) then
+                x[key] = nil
+            else
+                if type(key) == "table" then
+                    rfuncs(key)
+                end
+                if type(value) == "table" then
+                    rfuncs(value)
+                end
+            end
+        end
+    end
+
+    rfuncs(obj)
+
+    return obj
+end
+
+function api.save_mem(meta, mem)
+    local mem = remove_functions(mem) -- safe because we remove the fun stuff
+
+    -- we dont to validate mem for size, as the entire environment gets validated for it
+    -- worst case mem is 20 megabytes
+    meta:set_string("mem", minetest.serialize(mem))
+end
+
 function api.run_sandbox(pos, event)
     local meta = minetest.get_meta(pos)
     local id = meta:get_string("ID")
@@ -126,11 +180,18 @@ function api.run_sandbox(pos, event)
     if mesecon.do_overheat(pos) then
         api.report_error(meta, "Overheated!")
         libox.coroutine.active_sandboxes[id] = nil
+        return
     end
 
 
 
     local ok, errmsg_or_value = libox.coroutine.run_sandbox(id, event or { type = "program" })
+    local sandbox = libox.coroutine.active_sandboxes[id]
+    if sandbox ~= nil and sandbox.env ~= nil then
+        api.save_mem(meta,
+            libox.coroutine.active_sandboxes[id].env.mem -- spooky
+        )
+    end
     if not ok then
         api.report_error(meta, tostring(errmsg_or_value))
         libox.coroutine.active_sandboxes[id] = nil
