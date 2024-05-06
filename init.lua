@@ -37,7 +37,6 @@ local nodebox = {
     }
 }
 
-
 minetest.register_node(libox_computer.basename, {
     drawtype = "nodebox",
     tiles = {
@@ -63,7 +62,6 @@ minetest.register_node(libox_computer.basename, {
     drop = libox_computer.basename,
     groups = {
         cracky = 1,
-        no_silktouch = 1,
     },
     sunlight_propagates = true,
     node_box = nodebox,
@@ -78,10 +76,23 @@ minetest.register_node(libox_computer.basename, {
                     type = "digiline",
                     channel = channel,
                     msg = msg
-                }) -- digilines wake the sandbox up now... yes
+                })
+                -- digilines wake the sandbox up now... yes
             end
         }
-    }
+    },
+    on_dig = function(pos, node, digger)
+        local meta = minetest.get_meta(pos)
+        libox.coroutine.active_sandboxes[meta:get_string("ID") or ""] = nil
+        minetest.node_dig(pos, node, digger)
+        return true
+    end,
+    on_blast = function(pos, intensity)
+        local meta = minetest.get_meta(pos)
+        libox.coroutine.active_sandboxes[meta:get_string("ID") or ""] = nil
+        minetest.remove_node(pos)
+    end,
+    mod_origin = "libox_computer",
 })
 
 dofile(MP .. "/tool.lua")

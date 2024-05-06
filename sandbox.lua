@@ -5,14 +5,14 @@
         - executing
         - environment
         - yield behaviour
-
+    Basically a highly specific extension of libox
 ]]
 
 local api = {}
 
 local settings = libox_computer.settings
 
-api.raw_print = function(meta, text)
+function api.raw_print(meta, text)
     local old_text = meta:get_string("term_text")
     meta:set_string("term_text", string.sub(old_text .. text, -100000, -1))
     libox_computer.ui(meta)
@@ -60,65 +60,63 @@ local function get_clearterm(meta)
     return function() meta:set_string("term_text", "") end
 end
 
+local function get_color_laptop(pos)
+    return function(n)
+        if type(n) ~= "number" then return false end
+        if n < 0 then return false end
+        if n > 64 then return false end -- 64 COLORZ!!!
 
+        local n = math.floor(n)
 
+        local node = minetest.get_node(pos)
+
+        node.param2 = math.floor(node.param2 % 4 + n * 4)
+        minetest.swap_node(pos, node)
+    end
+end
+
+local function safe_coroutine_resume(...)
+    --[[
+    THIS USES RAW PCALL..... AAND CALLS STUFF FROM THE USER
+    so we need to be very careful
+    and by that i mean we can't use sandbox_lib_f because that will allow the user to (""):rep(math.huge)
+    ]]
+    local retvalue = {
+        coroutine.resume(co, ...)
+    }
+    if not debug.gethook() then
+        error("Code timed out! (from coroutine.resume)", 2)
+    end
+    return retvalue
+end
 
 function api.create_environment(pos)
     local base = libox.create_basic_environment()
     local meta = minetest.get_meta(pos)
     local mem = minetest.deserialize(meta:get_string("mem") or "") or {}
     meta:set_string("term_text", "")
+
     local add = {
         pos = vector.copy(pos),
-
         yield = coroutine.yield,
-
         print = libox.sandbox_lib_f(get_print(meta)),
         clearterm = libox.sandbox_lib_f(get_clearterm(meta)),
-
         settings = table.copy(settings),
-
         digiline_send = libox.sandbox_lib_f(get_digiline_send(pos)),
-
         heat = mesecon.get_heat(pos),
         heat_max = settings.heat_max,
+        color_laptop = libox.sandbox_lib_f(get_color_laptop(pos)),
 
-        color_laptop = libox.sandbox_lib_f(function(n)
-            if type(n) ~= "number" then return false end
-            if n < 0 then return false end
-            if n > 64 then return false end -- 64 COLORZ!!!
-            n = math.floor(n)
-            local node = minetest.get_node(pos)
-            local param2 = node.param2
-            local rot = param2 % 4
-            -- so if division by 4 yields the pallete index then...
-            local pallete_index = n * 4
-            -- and we just... set the node
-            node.param2 = math.floor(rot + pallete_index)
-            minetest.swap_node(pos, node)
-        end),
-
-        gui = libox.sandbox_lib_f(libox_computer.touchscreen_protocol.get_touchscreen_ui(meta)),
+        gui = libox.sandbox_lib_f(
+            libox_computer.touchscreen_protocol.get_touchscreen_ui(meta)
+        ),
 
         code = meta:get_string("code"),
         mem = mem,
 
         coroutine = {
             create = coroutine.create,
-            resume = function(co, ...)
-                --[[
-                THIS USES RAW PCALL..... AAND CALLS STUFF FROM THE USER
-                so we need to be very careful
-                and by that i mean we can't use sandbox_lib_f because that will allow the user to (""):rep(math.huge)
-                ]]
-                local retvalue = {
-                    coroutine.resume(co, ...)
-                }
-                if not debug.gethook() then
-                    error("Code timed out! (from coroutine.resume)", 2)
-                end
-                return retvalue
-            end,
+            resume = safe_coroutine_resume,
             status = coroutine.status,
             yield = coroutine.yield,
         },
@@ -130,6 +128,7 @@ end
 function api.create_sandbox(pos) -- position, not meta, because create_environment depends on pos to get things like heat and.. the position
     local meta = minetest.get_meta(pos)
     meta:set_string("errmsg", "")
+    meta:set_int("creation_time", os.time())
     local code = meta:get_string("code")
     local ID = libox.coroutine.create_sandbox({
         code = code,
@@ -190,6 +189,34 @@ function api.save_mem(meta, mem)
     meta:set_string("mem", minetest.serialize(mem))
 end
 
+local function yield_logic(pos, meta, value)
+    local id = meta:get_string("ID")
+    if type(value) == "string" then value = { type = value } end
+    if type(value) == "number" then
+        value = {
+            type = "wait",
+            time = value
+        }
+    end
+    if type(value) ~= "table" then return end
+    if value.type == nil then return end
+
+    if type(value.type) ~= "string" then return end
+
+    if value.time and type(value.time) ~= "number" then return end
+    if value.time and value.time < settings.min_delay then value.time = settings.min_delay end
+
+    if value.type == "stop" then
+        api.report_error(meta, "Sandbox stopped.")
+        libox.coroutine.active_sandboxes[id] = nil
+    elseif value.type == "wait" and value.time then
+        meta:set_int("is_waiting", 1) -- ignore all incoming events
+        mesecon.queue:add_action(pos, "lb_wait", { id }, value.time, id, 1)
+    elseif value.type == "await" and value.time then
+        mesecon.queue:add_action(pos, "lb_await", { id }, value.time, id, 1)
+    end
+end
+
 function api.run_sandbox(pos, event)
     local meta = minetest.get_meta(pos)
     local id = meta:get_string("ID")
@@ -208,8 +235,6 @@ function api.run_sandbox(pos, event)
         return
     end
 
-
-
     local ok, errmsg_or_value = libox.coroutine.run_sandbox(id, event or { type = "program" })
     local sandbox = libox.coroutine.active_sandboxes[id]
     if sandbox ~= nil and sandbox.env ~= nil then
@@ -220,56 +245,22 @@ function api.run_sandbox(pos, event)
     if not ok then
         api.report_error(meta, tostring(errmsg_or_value))
         libox.coroutine.active_sandboxes[id] = nil
-    elseif errmsg_or_value == "stop" or errmsg_or_value == { type = "stop" } then
-        api.report_error(meta, "Sandbox stopped.")
-        libox.coroutine.active_sandboxes[id] = nil
     else
-        -- THE YIELD PROCESSOR
-        -- we use mesecons ActionQueue™ for this
-        -- TODO: refactor the code maybe? i mean its messy as crap
-
-        local value = errmsg_or_value
-        if type(value) == "number" then
-            value = {
-                type = "wait",
-                time = value,
-            }
-        end
-        if type(value) == "string" then
-            if value == "await" then
-                value = {
-                    type = "await",
-                }
-            end
-        end
-        if type(value) ~= "table" then return end -- await without time argument is that
-        if value.type == nil then return end
-
-        if value.type == "wait" and type(value.time) == "number" then
-            local time = value.time
-            meta:set_int("is_waiting", 1) -- ignore all incoming events
-
-            if time < settings.min_delay then time = settings.min_delay end
-            mesecon.queue:add_action(pos, "lb_wait", { id }, time, id, 1)
-        elseif value.type == "await" then
-            if not value.time or type(value.time) ~= "number" then return end -- await without time argument is that
-
-            if value.time < settings.min_delay then value.time = settings.min_delay end
-            mesecon.queue:add_action(pos, "lb_await", { id }, value.time, id, 1)
-        end
+        yield_logic(pos, meta, errmsg_or_value)
     end
 end
 
-local delay = settings.sandbox_delay -- if 5 seconds pass you can create another sandbox
+local delay = settings.sandbox_delay
+
 function api.wake_up_and_run(pos, event)
     local meta = minetest.get_meta(pos)
     local id = meta:get_string("ID")
-    local creation_time = meta:get_int("creation_time") or -delay
+    local creation_time = meta:get_int("creation_time") or math.huge
 
     local is_dead = libox.coroutine.is_sandbox_dead(id)
-    local creation_time_check_success = creation_time < (os.clock() - delay)
+    local creation_time_check_success = creation_time < (os.time() - delay)
+
     if is_dead and creation_time_check_success then
-        meta:set_int("creation_time", os.clock())
         api.create_sandbox(pos)
     end
     if (not creation_time_check_success) and is_dead then

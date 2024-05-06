@@ -14,8 +14,8 @@ see DOCS.md for actual documentation and introduction
 
 # License
 
-Code - LGPLv3
-
+Code - LGPLv3  
+Inspiration - [LWcomputers](https://github.com/loosewheel/lwcomputers/) (but today lwcomputers is abadoned and filled with ways to bypass the time limit)
 *Some of the code has been based off of mooncontroller*
 
 - Ui - based off mooncontroller's ui - [mooncontroller's ui.lua](https://github.com/mt-mods/mooncontroller/blob/master/ui.lua)
