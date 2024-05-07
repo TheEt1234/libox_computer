@@ -127,6 +127,7 @@ in the meantime you can like... `yield(5)` or something idk up to you
 - The colors are based off of the pallete defined in textures/laptop_palette.png 
 
 # Other stuff
+
 `pos` - position  
 `settings` - the settings table  
 
@@ -140,3 +141,62 @@ in the meantime you can like... `yield(5)` or something idk up to you
 - create - unchanged
 - resume - Changed in the style of libox pcall
 - yield - unchanged, same yield as in _G
+
+# ROBOT
+- Offers an extended version of laptop's library, a huge inventory and inventory manipulation
+- Changes: `color_laptop(n) -> color_robot(n)`, robot only supports 8 colors
+
+== FROM NOW ON, THIS IS ABOUT THE ROBOT ==
+
+# Inv library (inv.*)
+
+They are limited methods of InvRef, not returning ItemStacks but their table'd versions, they are called like `a.b` not `a:b`  
+Please see [InvRef docs](https://api.minetest.net/class-reference/#invref), even if this library is severely limited
+
+- is_empty = unchanged,
+- get_size = unchanged,
+- get_stack = gets the table'd version of the itemstack
+- get_list = gets the list of table'd versions of itemstack,
+
+- room_for_item = unchanged,
+- contains_item(stack, [match_meta]) = uncahnged
+
+
+- lock = locks the inventory
+- unlock = unlocks the inventory, by default the inventory is unlocked, avaliable to even client side mods *please lock your inventory if you have something going on there*
+
+# GUI - Displaying the inventory
+
+There are 2 methods:
+- formspecs:  
+    ```lua
+        {
+            command = "formspec",
+            text = "list[current_name;main;1,1;12,12;]"
+        }
+    ```
+- using the new list command:
+    ```lua
+        {
+            command = "add",
+            element = "list",
+            location = "current_name"
+            name = "main", -- THIS WILL NOT GET RETURNED BY ANY FIELDS, this is the inventory name, for the robot it is main, so use main unless you are doing something crazy  
+            X = 0, 
+            Y = 0,
+            W = 10,
+            H = 10,
+            start_index = 0,
+ 
+        }
+
+    ```
+
+# Pipeworks support - injecting items
+
+inject_item(item, rpos)
+- item, if a number will point to the index in the inventory
+- item, if a string or a table, will *go thru all the slots* and attempt to find an item with the same name
+
+- rpos, is a vector that indicates the relative coordinates of where the item will be injected in, by default `{ x = 0, y = 1, z = 0 }`, also indicates the velocity
+

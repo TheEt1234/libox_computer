@@ -12,54 +12,6 @@ local api = {}
 
 local settings = libox_computer.settings
 
-function api.raw_print(meta, text)
-    local old_text = meta:get_string("term_text")
-    meta:set_string("term_text", string.sub(old_text .. text, -100000, -1))
-    libox_computer.ui(meta)
-end
-
-function api.report_error(meta, text, preceeding_text)
-    local preceeding_text = preceeding_text or "[ERROR] "
-    api.raw_print(meta, preceeding_text .. text .. "\n")
-    meta:set_string("errmsg", text)
-    libox_computer.ui(meta)
-end
-
-local function get_digiline_send(pos)
-    return function(channel, msg)
-        if type(channel) == "string" then
-            if #channel > settings.chan_maxlen then
-                return "Channel string too long"
-            elseif (type(channel) ~= "string" and type(channel) ~= "number" and type(channel) ~= "boolean") then
-                return "Channel must be string, number or boolean."
-            end
-            local msg, msg_cost = libox.digiline_sanitize(msg, settings.allow_functions_in_digiline_messages,
-                libox_computer.wrap)
-            if msg == nil or msg_cost > settings.maxlen then
-                return "Too complex or contained invalid data"
-            end
-        end
-        mesecon.queue:add_action(pos, "lb_digiline_relay", { channel, msg })
-    end
-end
-
-
-local function get_print(meta) -- mooncontroller like
-    return function(param, nolf)
-        if param == nil then param = "" end
-        local delim = "\n"
-        if nolf then delim = "" end
-        if type(param) == "string" then
-            api.raw_print(meta, param .. delim)
-        else
-            api.raw_print(meta, dump(param) .. delim)
-        end
-    end
-end
-local function get_clearterm(meta)
-    return function() meta:set_string("term_text", "") end
-end
-
 local function get_color_laptop(pos)
     return function(n)
         if type(n) ~= "number" then return false end
@@ -70,27 +22,30 @@ local function get_color_laptop(pos)
 
         local node = minetest.get_node(pos)
 
-        node.param2 = math.floor(node.param2 % 4 + n * 4)
+        node.param2 = math.floor(node.param2 % 4 + n * 4) -- ah math, see minetest api documentation, but basically trust me bro
         minetest.swap_node(pos, node)
     end
 end
 
-local function safe_coroutine_resume(...)
-    --[[
-    THIS USES RAW PCALL..... AAND CALLS STUFF FROM THE USER
-    so we need to be very careful
-    and by that i mean we can't use sandbox_lib_f because that will allow the user to (""):rep(math.huge)
-    ]]
-    local retvalue = {
-        coroutine.resume(co, ...)
-    }
-    if not debug.gethook() then
-        error("Code timed out! (from coroutine.resume)", 2)
+local function get_color_robot(pos)
+    return function(n)
+        if type(n) ~= "number" then return false end
+        if n < 0 then return false end
+        if n > 8 then return false end -- only 8 colors
+
+        local n = math.floor(n)
+
+        local node = minetest.get_node(pos)
+
+        node.param2 = math.floor(node.param2 % 32 + n * 32) -- ah math, see minetest api documentation, but basically trust me bro
+        minetest.swap_node(pos, node)
     end
-    return retvalue
 end
 
-function api.create_environment(pos)
+local libf = libox.sandbox_lib_f
+-- magic that makes a library function safe :tm: -- ok but more specifically it escapes the string sandbox and like does a bunch of stuff
+
+function api.create_laptop_environment(pos)
     local base = libox.create_basic_environment()
     local meta = minetest.get_meta(pos)
     local mem = minetest.deserialize(meta:get_string("mem") or "") or {}
@@ -99,15 +54,15 @@ function api.create_environment(pos)
     local add = {
         pos = vector.copy(pos),
         yield = coroutine.yield,
-        print = libox.sandbox_lib_f(get_print(meta)),
-        clearterm = libox.sandbox_lib_f(get_clearterm(meta)),
+        print = libf(libox_computer.get_print(meta)),
+        clearterm = libf(libox_computer.get_clearterm(meta)),
         settings = table.copy(settings),
-        digiline_send = libox.sandbox_lib_f(get_digiline_send(pos)),
+        digiline_send = libf(libox_computer.get_digiline_send(pos)),
         heat = mesecon.get_heat(pos),
         heat_max = settings.heat_max,
-        color_laptop = libox.sandbox_lib_f(get_color_laptop(pos)),
+        color_laptop = libf(get_color_laptop(pos)),
 
-        gui = libox.sandbox_lib_f(
+        gui = libf(
             libox_computer.touchscreen_protocol.get_touchscreen_ui(meta)
         ),
 
@@ -116,7 +71,7 @@ function api.create_environment(pos)
 
         coroutine = {
             create = coroutine.create,
-            resume = safe_coroutine_resume,
+            resume = libox_computer.safe_coroutine_resume,
             status = coroutine.status,
             yield = coroutine.yield,
         },
@@ -125,15 +80,213 @@ function api.create_environment(pos)
     return base
 end
 
+local function curry(f, ...)
+    -- only used to hide data conveniently in this case
+    -- but basically see https://wiki.haskell.org/Currying
+    -- this is a simpler version of it
+    -- i think i might start using this more idk it seems so cool
+    local og_arg_arr = { ... }
+
+    return function(...)
+        local will_be_supplied = table.copy(og_arg_arr)
+        local supplied = { ... }
+        for k, v in ipairs(supplied) do
+            will_be_supplied[#will_be_supplied + 1] = v
+        end
+        return f(unpack(will_be_supplied))
+    end
+end
+
+
+local function get_safe_ItemStack(f)
+    return function(...)
+        local x = f(...)
+
+        if type(x) ~= "userdata" and type(x) ~= "table"
+            and type(x) ~= "string"
+            and x ~= nil then
+            return "sorry couldnt get the stack"
+        end
+
+        local core = ItemStack(x)
+        return core:to_table()
+    end
+end
+
+
+local function convert_to_safe_itemstacks(f)
+    return function(...)
+        local x = f(...)
+        local result = {}
+        for k, v in pairs(x) do
+            if type(v) == "table" then
+                result[k] = convert_to_safe_itemstacks(v)
+            elseif type(v) == "userdata" and v.to_table then
+                result[k] = v:to_table()
+            else
+                result[k] = v
+            end
+        end
+        return result
+    end
+end
+
+function api.create_robot_environment(pos)
+    local base = libox.create_basic_environment()
+    local meta = minetest.get_meta(pos)
+    local inv = meta:get_inventory()
+    local owner = meta:get_string("owner") or ""
+    local mem = minetest.deserialize(meta:get_string("mem") or "") or {}
+    meta:set_string("term_text", "")
+
+    local add = {
+        traceback = debug.traceback, -- libox.traceback is unsafe to expose, and like... lets give the chance SOME WAY to debug generic errors
+        pos = vector.copy(pos),
+        yield = coroutine.yield,
+        print = libf(libox_computer.get_print(meta)),
+        clearterm = libf(libox_computer.get_clearterm(meta)),
+        settings = table.copy(settings),
+        digiline_send = libf(libox_computer.get_digiline_send(pos)),
+        heat = mesecon.get_heat(pos),
+        heat_max = settings.heat_max,
+        color_robot = libf(get_color_robot(pos)),
+
+        gui = libf(
+            libox_computer.touchscreen_protocol.get_touchscreen_ui(meta)
+        ),
+
+        code = meta:get_string("code"),
+        mem = mem,
+
+        coroutine = {
+            create = coroutine.create,
+            resume = libox_computer.safe_coroutine_resume,
+            status = coroutine.status,
+            yield = coroutine.yield,
+        },
+        -- inventory/pipeworks related
+        -- we CANNOT let the user access the ItemStack and MetaRef userdata because its like almost impossible to weigh unless using special logic
+        inv = {
+            is_empty = libf(curry(inv.is_empty, inv, "main")),
+            get_size = libf(curry(inv.get_size, inv, "main")),
+            get_stack =
+                libf(get_safe_ItemStack(
+                    curry(inv.get_stack, inv, "main")
+                )),
+            get_list = libf(convert_to_safe_itemstacks(curry(inv.get_list, inv, "main"))),
+
+            room_for_item = libf(curry(inv.room_for_item, inv, "main")),
+            contains_item = libf(curry(inv.contains_item, inv, "main")),
+            lock = libf(function()
+                meta:set_int("locked_inv", 1)
+            end),
+            unlock = libf(function()
+                meta:set_int("locked_inv", 0)
+            end)
+        },
+
+    }
+
+
+    if minetest.global_exists("pipeworks") then
+        add.inject_item = libf(function(item, rpos)
+            local function is_valid_rpos(rpos)
+                if type(rpos) ~= "table" then return false end
+                local valid_rpos_arr = {
+                    { x = 1,  y = 0,  z = 0 },
+                    { x = -1, y = 0,  z = 0 },
+                    { x = 0,  y = 1,  z = 0 },
+                    { x = 0,  y = -1, z = 0 },
+                    { x = 0,  y = 0,  z = 1 },
+                    { x = 0,  y = 0,  z = -1 }
+                }
+                for k, v in ipairs(valid_rpos_arr) do
+                    if rpos.x == v.x and rpos.y == v.y and rpos.z == v.z then return true end
+                end
+                return false
+            end
+            --[[
+                PROBLEM:
+                we need PROOF of the item's existance
+                so... its easy if type(item) == "number"
+                then we can return what is on that list, if its no good then yeah its just empty
+
+                Also rpos is the relative pos
+                sort of like a lazy version of the luatube port
+            ]]
+            if rpos == nil then rpos = { x = 0, y = 1, z = 0 } end
+            if not is_valid_rpos(rpos) then return "rpos isn't valid, do something like { x = 0, y = 1, z = 0 }" end
+            rpos = vector.new(rpos.x, rpos.y, rpos.z)
+
+            local stack
+            if type(item) == "number" then
+                -- we see the index
+                stack = inv:get_stack("main", item)
+
+                if stack == nil then
+                    return "(Treating item param as index) Pointed to nothing."
+                end
+
+                if stack:is_empty() then
+                    return "(Treating item param as index) Pointed to empty stack."
+                end
+
+                -- delete the item
+                inv:set_stack("main", item, ItemStack(""))
+            elseif type(item) == "table" or type(item) == "string" then
+                -- in this case, we need to search for the itemstack in the list to prove its existance
+
+                stack = ItemStack(item)
+
+                if stack:get_count() > stack:get_stack_max() then -- cant have fun happen
+                    stack:set_count(stack:get_stack_max())
+                end
+
+                local list = inv:get_list("main")
+
+                local found_stack = nil
+                for k, v in ipairs(list) do
+                    if v:get_name() == stack:get_name() then
+                        found_stack = v
+                        inv:set_stack("main", k, ItemStack(""))
+                        break
+                    end
+                end
+
+                if not found_stack then
+                    return "Didn't find that item stack"
+                else
+                    stack = found_stack
+                end
+            else
+                return "Itemstring of invalid type, its a table, string or a number if index"
+            end
+
+            pipeworks.tube_inject_item(pos + rpos, pos, rpos, stack, owner, {})
+        end)
+    end
+    for k, v in pairs(add) do base[k] = v end
+    return base
+end
+
 function api.create_sandbox(pos) -- position, not meta, because create_environment depends on pos to get things like heat and.. the position
     local meta = minetest.get_meta(pos)
     meta:set_string("errmsg", "")
     meta:set_int("creation_time", os.time())
+    local is_laptop = meta:get_int("robot") == 0
     local code = meta:get_string("code")
+
+    local env
+    if is_laptop then
+        env = api.create_laptop_environment(pos)
+    else
+        env = api.create_robot_environment(pos)
+    end
+
     local ID = libox.coroutine.create_sandbox({
         code = code,
         is_garbage_collected = true,
-        env = api.create_environment(pos),
+        env = env,
         time_limit = settings.time_limit,
         hook_time = 10,
         size_limit = settings.size_limit,
@@ -187,6 +340,7 @@ function api.save_mem(meta, mem)
     -- we dont to validate mem for size, as the entire environment gets validated for it
     -- worst case mem is 20 megabytes
     meta:set_string("mem", minetest.serialize(mem))
+    meta:mark_as_private("mem")
 end
 
 local function yield_logic(pos, meta, value)
@@ -207,7 +361,7 @@ local function yield_logic(pos, meta, value)
     if value.time and value.time < settings.min_delay then value.time = settings.min_delay end
 
     if value.type == "stop" then
-        api.report_error(meta, "Sandbox stopped.")
+        libox_computer.report_error(meta, "Sandbox stopped.")
         libox.coroutine.active_sandboxes[id] = nil
     elseif value.type == "wait" and value.time then
         meta:set_int("is_waiting", 1) -- ignore all incoming events
@@ -230,7 +384,7 @@ function api.run_sandbox(pos, event)
     end
 
     if mesecon.do_overheat(pos) then
-        api.report_error(meta, "Overheated!")
+        libox_computer.report_error(meta, "Overheated!")
         libox.coroutine.active_sandboxes[id] = nil
         return
     end
@@ -243,7 +397,7 @@ function api.run_sandbox(pos, event)
         )
     end
     if not ok then
-        api.report_error(meta, tostring(errmsg_or_value))
+        libox_computer.report_error(meta, tostring(errmsg_or_value))
         libox.coroutine.active_sandboxes[id] = nil
     else
         yield_logic(pos, meta, errmsg_or_value)
@@ -264,7 +418,7 @@ function api.wake_up_and_run(pos, event)
         api.create_sandbox(pos)
     end
     if (not creation_time_check_success) and is_dead then
-        return api.report_error(meta,
+        return libox_computer.report_error(meta,
             "Sandbox ratelimit reached, retry later (" .. delay .. " second limit).")
     end
     return api.run_sandbox(pos, event)

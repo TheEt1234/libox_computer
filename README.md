@@ -12,6 +12,11 @@ see DOCS.md for actual documentation and introduction
 - it also depends on [libox](https://github.com/TheEt1234/libox) for the coroutine sandboxing
  - optionally, not so much if you are a server... you can make libox a trusted mod and it will weigh the local variables and upvalues of the coroutine
 
+## Robot's depends
+
+- pipeworks: `while i dont like pipeworks (autocrafters feel horrible to use when doing multi-ingredient stuff, has all theese liquid pipes whose only use is proabbly griefing and SOMEHOW they existed for more than 7 YEARS WITHOUT A GOOD USE, not even joking) they are mostly fine...` everybody uses them and its perfect for me so...
+
+
 # License
 
 Code - LGPLv3  

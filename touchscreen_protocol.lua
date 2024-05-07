@@ -284,6 +284,12 @@ local formspec_elements = {
         { "",          "" },
         { list,        prop }
     },
+    list = {
+        "list[%s;%s;%s,%s;%s,%s;%s]",
+        { "location",     "name", "X", "Y", "W",  "H",  "start_index" },
+        { "current_name", "main", "0", "0", "10", "10", "0" },
+        { str,            str,    num, num, num,  num,  num }
+    }
 }
 
 -- Create un-format strings for modifying elements

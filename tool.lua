@@ -19,7 +19,7 @@ end
 
 minetest.register_craftitem("libox_computer:programmer", {
     description = "Laptop programmer\n" ..
-        minetest.colorize("#777777", "All it currently does is reset the laptop to the editor ui"),
+        minetest.colorize("#777777", "All it currently does is reset the laptop/robot to the editor ui"),
     short_description = "Laptop programmer",
     inventory_image = "laptop_tool.png",
     stack_max = 1,
@@ -34,15 +34,17 @@ minetest.register_craftitem("libox_computer:programmer", {
             return
         end
         local node = minetest.get_node(under)
-        if node.name ~= libox_computer.basename then return end
+        if not libox_computer.is_from_mod[node.name] then return end
+
         local meta = minetest.get_meta(under)
         meta:set_int("ts_ui", 0)
         libox_computer.ui(meta)
+
         -- LISTEN, IT'S A REQUIREMENT!
         -- if you set this to 100 its like really fun
         -- im gonna keep it as that
+        -- also its not using particle spawners because... i dont really know how i would use them here like that...
 
-        -- also its not using particle spawners because... i dont really know how i would use them here
         for _ = 1, 25 do
             minetest.add_particle({
                 pos = (
