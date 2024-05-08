@@ -192,11 +192,60 @@ There are 2 methods:
 
     ```
 
-# Pipeworks support - injecting items
+# Pipeworks support 
+- Robot is allowed to take the items if pipeworks is avaliable
 
+### Injecting items
 inject_item(item, rpos)
 - item, if a number will point to the index in the inventory
 - item, if a string or a table, will *go thru all the slots* and attempt to find an item with the same name
 
-- rpos, is a vector that indicates the relative coordinates of where the item will be injected in, by default `{ x = 0, y = 1, z = 0 }`, also indicates the velocity
+- rpos, is a vector that indicates the relative coordinates of where the item will be injected in, by default `{ x = 0, y = 1, z = 0 }`, also indicates the velocity, see "Valid rposes" for more
 
+### Valid rposes
+
+Theese are the tables you can insert when something says it has an *rpos* argument
+
+```lua
+        { x = 1,  y = 0,  z = 0 }
+        { x = -1, y = 0,  z = 0 }
+        { x = 0,  y = 1,  z = 0 }
+        { x = 0,  y = -1, z = 0 }
+        { x = 0,  y = 0,  z = 1 }
+        { x = 0,  y = 0,  z = -1 }
+```
+# Moving
+## move(rpos)
+-  rpos, is a vector that indicates the relative coordinates of where the robot will move, by default `{ x = 0, y = 1, z = 0 }` see "Valid rposes" for more  
+
+This function is actually equal to:
+```lua
+    coroutine.yield({
+        type = "move",
+        rpos = rpos,
+    })
+```
+
+It will give back a `wait` event, currently it is hardcoded to wait 0.1 seconds
+
+#### Possible errors with this: (it will give back an `error` event, whose `errmsg` contains the error):
+
+- if the target node isn't buildable to, it errors
+- if the target node is ignore, it errors
+- if the area is protected and not accessible by you, it errors
+
+# node.* library (only avaliable if pipeworks are supported)
+
+All positions are relative, in a range defined in settings (by default 30)
+
+- is_protected(pos[, owner]) - owner is optional, checks if an area is protected
+- get(pos) - get a node
+- place(pos, name[, def]) - def is optional, places an item/node at that relative position
+- dig(pos, name) - digs a node with a tool (the tool's name is in... name), does not wear out the tool
+
+### If you are worried about lag:
+- all the node.* functions get accounted for their lag, so it respects the 3ms limit
+
+### If you are worried about balance:
+- You can set a setting that will force the world modifying functions to wait more
+- The dig_node function will *always* wait the amount of time the tool takes to destroy the node, keep that in mind *when limiting the other actions..., don't make placing take 2x more as digging... :>*

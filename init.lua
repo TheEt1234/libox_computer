@@ -17,6 +17,8 @@ libox_computer = {
         cooldown_step = mesecon.setting("cooldown_granularity", 0.5),
         allow_functions_in_digiline_messages = settings:get("libox_computer_allow_functions") or false,
         sandbox_delay = settings:get_bool("libox_computer_sandbox_delay") or 5,
+        range = tonumber(settings:get("libox_computer_range")) or 30, -- double the digibuilder
+        set_node_delay = tonumber(settings:get("libox_computer_set_node_delay")) or 0.1,
     }
 }
 
@@ -28,11 +30,12 @@ end
 
 local MP = minetest.get_modpath(minetest.get_current_modname())
 dofile(MP .. "/touchscreen_protocol.lua")
+dofile(MP .. "/robot_actions.lua")
+
 dofile(MP .. "/utils.lua")
 dofile(MP .. "/sandbox.lua")
 dofile(MP .. "/frontend.lua")
 
 dofile(MP .. "/laptop.lua")
 dofile(MP .. "/robot.lua")
-
 dofile(MP .. "/tool.lua")

@@ -6,7 +6,6 @@ end
 function libox_computer.raw_print(meta, text)
     local old_text = meta:get_string("term_text")
     meta:set_string("term_text", string.sub(old_text .. text, -100000, -1))
-    libox_computer.ui(meta)
 end
 
 function libox_computer.report_error(meta, text, preceeding_text)

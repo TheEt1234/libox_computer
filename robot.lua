@@ -42,7 +42,7 @@ minetest.register_node(libox_computer.basename_robot, {
         libox_computer.ui(meta)
     end,
     after_place_node = function(pos, placer, stack, pointed)
-        meta:set_string("owner", placer:get_player_name())
+        minetest.get_meta(pos):set_string("owner", placer:get_player_name())
     end,
     on_receive_fields = libox_computer.on_receive_fields,
     drop = libox_computer.basename_robot,

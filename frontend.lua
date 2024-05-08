@@ -5,16 +5,16 @@ local function ui(meta)
     local errmsg = escape(meta:get_string("errmsg"))
     if (errmsg ~= "" and errmsg ~= nil) or (meta:get_int("ts_ui") == 0) then
         if (errmsg ~= "" and errmsg ~= nil) then meta:set_int("ts_ui", 0) end
-
+        local is_robot = meta:get_int("robot") == 1
         local tab = meta:get_int("tab")
-        if tab < 1 or tab > 4 then tab = 1 end
+        if tab < 1 or tab > 5 then tab = 1 end
 
         local fs = "formspec_version[4]"
             .. "size[15,12]"
             .. "style_type[label,textarea,field;font=mono]"
             .. "style_type[textarea;textcolor=#ffffff]"
             .. "background[0,0;15,12;laptop_ui_bg.png]"
-            .. "tabheader[0,0;tab;Code,Terminal,Help;" .. tab .. "]"
+            .. "tabheader[0,0;tab;Code,Terminal,Help,Inventory;" .. tab .. "]"
             .. "image_button_exit[14.5,0;0.425,0.4;jeija_close_window.png;exit;]"
 
         if tab == 1 then
@@ -35,6 +35,15 @@ local function ui(meta)
         elseif tab == 3 then
             fs = fs ..
                 "textarea[0.25,0.6;14.5,9.05;;;See https://github.com/TheEt1234/libox_computer/blob/master/DOCS.md]"
+        elseif tab == 4 and not is_robot then
+            fs = fs ..
+                "textarea[0.25,0.6;14.5,9.05;;;This is a laptop, not a robot.]"
+        elseif tab == 4 and is_robot then
+            fs = fs
+                .. "style_type[list;size=0.7,0.7;spacing=0.1,0.1]"
+                .. "list[current_name;main;0.65,0.8;17,8;]"
+                .. "list[current_player;main;0.65,7.6;17,5;]"
+                .. "listring[]"
         end
         meta:set_string("formspec", fs)
         meta:set_string("errmsg", "")
@@ -64,7 +73,7 @@ local function on_receive_fields(pos, _, fields, sender)
             meta:set_string("errmsg", "")
             meta:set_int("ts_ui", 0)
             meta:set_string("code", fields.code)
-
+            meta:set_string("data", minetest.serialize({}))
 
             libox_computer.sandbox.create_sandbox(pos)
             libox_computer.sandbox.run_sandbox(pos)

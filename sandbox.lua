@@ -131,6 +131,36 @@ local function convert_to_safe_itemstacks(f)
     end
 end
 
+local function is_valid_rpos(rpos)
+    if type(rpos) ~= "table" then return false end
+    local valid_rpos_arr = {
+        { x = 1,  y = 0,  z = 0 },
+        { x = -1, y = 0,  z = 0 },
+        { x = 0,  y = 1,  z = 0 },
+        { x = 0,  y = -1, z = 0 },
+        { x = 0,  y = 0,  z = 1 },
+        { x = 0,  y = 0,  z = -1 }
+    }
+    for k, v in ipairs(valid_rpos_arr) do
+        if rpos.x == v.x and rpos.y == v.y and rpos.z == v.z then return true end
+    end
+    return false
+end
+
+local function is_vector_within_range(vec)
+    return vector.in_area(vec, {
+        x = -settings.range,
+        y = -settings.range,
+        z = -settings.range
+    }, {
+        x = settings.range,
+        y = settings.range,
+        z = settings.range
+    })
+end
+
+
+
 function api.create_robot_environment(pos)
     local base = libox.create_basic_environment()
     local meta = minetest.get_meta(pos)
@@ -184,32 +214,32 @@ function api.create_robot_environment(pos)
                 meta:set_int("locked_inv", 0)
             end)
         },
+        move = function(rpos)
+            --[[
+                Problem: Yield logic can't handle our shenanigans (fair)
+                so we need to somehow inform the system that the position of the node has been changed
+                ummmmm
+                OH RIGHT I HAVE AN IDEA
+                yield({
+                    type = "move",
+                    rpos = {vector}
+                })
 
+                and this simply being an alias
+            ]]
+            return coroutine.yield({
+                type = "move",
+                rpos = rpos,
+            })
+        end
     }
 
 
     if minetest.global_exists("pipeworks") then
         add.inject_item = libf(function(item, rpos)
-            local function is_valid_rpos(rpos)
-                if type(rpos) ~= "table" then return false end
-                local valid_rpos_arr = {
-                    { x = 1,  y = 0,  z = 0 },
-                    { x = -1, y = 0,  z = 0 },
-                    { x = 0,  y = 1,  z = 0 },
-                    { x = 0,  y = -1, z = 0 },
-                    { x = 0,  y = 0,  z = 1 },
-                    { x = 0,  y = 0,  z = -1 }
-                }
-                for k, v in ipairs(valid_rpos_arr) do
-                    if rpos.x == v.x and rpos.y == v.y and rpos.z == v.z then return true end
-                end
-                return false
-            end
             --[[
                 PROBLEM:
                 we need PROOF of the item's existance
-                so... its easy if type(item) == "number"
-                then we can return what is on that list, if its no good then yeah its just empty
 
                 Also rpos is the relative pos
                 sort of like a lazy version of the luatube port
@@ -264,6 +294,28 @@ function api.create_robot_environment(pos)
 
             pipeworks.tube_inject_item(pos + rpos, pos, rpos, stack, owner, {})
         end)
+
+        add.node = {
+            --[[
+                Assumbtion: all the positions in here are relative
+            ]]
+            is_protected = libf(function(rpos, who)
+                if who == nil then who = owner end
+                if not is_vector_within_range(rpos) then
+                    return "Vector not within range."
+                end
+                return minetest.is_protected(pos + rpos, who)
+            end),
+            get = libf(function(rpos)
+                if not is_vector_within_range(rpos) then
+                    return "Vector not within range."
+                end
+
+                return table.copy(minetest.get_node(pos + rpos))
+            end),
+            place = libf(libox_computer.get_place(pos, meta, inv, owner)),
+            dig = libf(libox_computer.get_break(pos, meta, inv, owner)),
+        }
     end
     for k, v in pairs(add) do base[k] = v end
     return base
@@ -343,31 +395,116 @@ function api.save_mem(meta, mem)
     meta:mark_as_private("mem")
 end
 
-local function yield_logic(pos, meta, value)
-    local id = meta:get_string("ID")
-    if type(value) == "string" then value = { type = value } end
-    if type(value) == "number" then
-        value = {
-            type = "wait",
-            time = value
-        }
-    end
-    if type(value) ~= "table" then return end
-    if value.type == nil then return end
+local yield_logic_funcs = {}
 
-    if type(value.type) ~= "string" then return end
-
-    if value.time and type(value.time) ~= "number" then return end
-    if value.time and value.time < settings.min_delay then value.time = settings.min_delay end
-
-    if value.type == "stop" then
+yield_logic_funcs.stop = {
+    types = {},
+    f = function(pos, meta, id)
         libox_computer.report_error(meta, "Sandbox stopped.")
         libox.coroutine.active_sandboxes[id] = nil
-    elseif value.type == "wait" and value.time then
+    end
+}
+yield_logic_funcs.wait = {
+    types = {
+        time = "number"
+    },
+    f = function(pos, meta, id, args)
+        local time = args.time
+        time = math.max(settings.min_delay, time)
         meta:set_int("is_waiting", 1) -- ignore all incoming events
-        mesecon.queue:add_action(pos, "lb_wait", { id }, value.time, id, 1)
-    elseif value.type == "await" and value.time then
-        mesecon.queue:add_action(pos, "lb_await", { id }, value.time, id, 1)
+        mesecon.queue:add_action(pos, "lb_wait", { id }, time, id, 1)
+    end
+}
+yield_logic_funcs.await = {
+    types = {
+        time = "number"
+    },
+    f = function(pos, meta, id, args)
+        local time = args.time
+        time = math.max(settings.min_delay, time)
+        mesecon.queue:add_action(pos, "lb_await", { id }, time, id, 1)
+    end
+}
+
+yield_logic_funcs.move = {
+    types = {
+        rpos = is_valid_rpos,
+    },
+    f = function(pos, meta, id, args)
+        local HARDCODED_MOVE_TIME = 0.1
+
+        local rpos = args.rpos
+
+        local use_pos = pos + vector.new(rpos.x, rpos.y, rpos.z)
+        local node = minetest.get_node(use_pos)
+
+        if minetest.registered_nodes[node.name].buildable_to == false then
+            return "There is already a solid node there"
+        end
+        if node.name == "ignore" then
+            return "Area wasn't loaded"
+        end
+        -- ok cool we can override the node now i guess
+        -- wait no protection
+        local owner = meta:get_string("owner")
+        if minetest.is_protected(use_pos, owner) then
+            return "Protected."
+        end
+
+        -- now how do we "swap" the node use_pos with pos
+        -- idk lmao
+
+        -- how about we use the aproach that the mesecons mvps did
+        local metatable = meta:to_table()
+        local og_node = minetest.get_node(pos)
+        minetest.remove_node(pos)
+        minetest.set_node(use_pos, og_node)
+        pos = use_pos
+        meta = minetest.get_meta(pos)
+        meta:from_table(metatable)
+        libox_computer.ui(meta)
+
+        meta:set_int("is_waiting", 1) -- ignore all incoming events
+        mesecon.queue:add_action(pos, "lb_wait", { id }, HARDCODED_MOVE_TIME, id, 1)
+    end
+}
+
+local function yield_logic(pos, meta, args)
+    local id = meta:get_string("ID")
+    if type(args) == "number" then
+        args = {
+            type = "wait",
+            time = args
+        }
+    end
+    if type(args) == "string" then
+        args = {
+            type = args
+        }
+    end
+    if type(args) ~= "table" then return end
+    local yield_f = yield_logic_funcs[args.type]
+    if yield_f == nil then
+        return -- await
+    end
+    for k, v in pairs(yield_f.types) do
+        if type(v) == 'function' then
+            if v(args[k]) == false then
+                mesecon.queue:add_action(pos, "lb_err", { id, "Invalid type:" .. k }, settings.min_delay, id, 1)
+                return
+            end
+        elseif type(v) == "string" then
+            if type(args[k]) ~= v then
+                mesecon.queue:add_action(pos, "lb_err", { id, "Invalid type: " .. k }, settings.min_delay, id, 1)
+                return
+            end
+        end
+    end
+
+    local ret_value = yield_f.f(pos, meta, id, args)
+    if type(ret_value) == "string" then
+        mesecon.queue:add_action(pos, "lb_err", { id, ret_value }, settings.min_delay, id, 1)
+        return
     end
 end
 
@@ -396,6 +533,7 @@ function api.run_sandbox(pos, event)
             libox.coroutine.active_sandboxes[id].env.mem -- spooky
         )
     end
+    libox_computer.ui(meta)
     if not ok then
         libox_computer.report_error(meta, tostring(errmsg_or_value))
         libox.coroutine.active_sandboxes[id] = nil
@@ -432,12 +570,23 @@ mesecon.queue:add_function("lb_wait", function(pos, id)
     })
 end)
 
+mesecon.queue:add_function("lb_err", function(pos, id, errmsg)
+    if libox.coroutine.is_sandbox_dead(id) then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
+    minetest.get_meta(pos):set_int("is_waiting", 0)
+    api.run_sandbox(pos, {
+        type = "error",
+        errmsg = errmsg,
+    })
+end)
+
 mesecon.queue:add_function("lb_await", function(pos, id)
     if libox.coroutine.is_sandbox_dead(id) then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
     api.run_sandbox(pos, {
         type = "await"
     })
 end)
+
+
 
 mesecon.queue:add_function("lb_digiline_relay", function(pos, channel, msg)
     local id = minetest.get_meta(pos):get_string("ID")
