@@ -242,7 +242,7 @@ All positions are relative, in a range defined in settings (by default 30)
 - get(pos) - get a node
 - place(pos, name[, def]) - def is optional, places an item/node at that relative position
 - dig(pos, name) - digs a node with a tool (the tool's name is in... name), does not wear out the tool
-
+- drop(pos, name) - drops a node
 ### If you are worried about lag:
 - all the node.* functions get accounted for their lag, so it respects the 3ms limit
 

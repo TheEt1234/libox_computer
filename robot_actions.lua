@@ -225,10 +225,7 @@ end
 
 --[[
     Now that we've got the place behaviour..... FUCK
-
     okay we seriously need a unified library for all this shit....
-
-
 ]]
 function libox_computer.get_break(pos, meta, inv, owner)
     return function(vec, name)
@@ -299,8 +296,48 @@ function libox_computer.get_break(pos, meta, inv, owner)
     end
 end
 
-function libox_computer.get_use(pos, meta, inv, owner)
+function libox_computer.get_drop(pos, meta, inv, owner)
+    return function(vec, name)
+        if not is_vector_within_range(vec) then
+            return "Vector not in range."
+        end
 
+        local absolute_pos = pos + vec
+
+        if minetest.is_protected(absolute_pos, owner) then
+            return "That area is protected"
+        end
+
+        if type(name) ~= "string" then return "Invalid item" end
+        local index = best_inventory_index(inv, name)
+        if index == nil then
+            return "Item not found"
+        end
+
+        local item_def = minetest.registered_items[name]
+        if item_def == nil then
+            return "Unknown item."
+        end
+        if not item_def.on_drop then
+            return "Can't drop this item (no on_drop)."
+        end
+
+        local player = pipeworks.create_fake_player({
+            name = owner,
+            inventory = inv,
+            wield_list = "main",
+            wield_index = index,
+            position = vector.subtract(absolute_pos, vector.new(0, 1.5, 0)),
+        })
+
+        local stack = item_def.on_drop(inv:get_stack("main", index), player, absolute_pos)
+        inv:set_stack("main", index, stack)
+
+        return coroutine.yield({
+            type = "wait",
+            time = settings.set_node_delay
+        })
+    end
 end
 
 function libox_computer.get_formspec_interract(pos, meta, inv, owner)

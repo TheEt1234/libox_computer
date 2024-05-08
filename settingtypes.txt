@@ -8,3 +8,8 @@ libox_computer_size_limit (Size limit, in megabytes) int 5
 libox_computer_allow_functions (Allow functions in digilines) bool false
 
 libox_computer_sandbox_delay (Delay between sandbox activation, in seconds) int 5
+
+libox_computer_range (Range of the robot) int 30
+
+# Digging uses it's own system, based on the tool
+libox_computer_set_node_delay (Place/drop node delay of the robot) float 0.1

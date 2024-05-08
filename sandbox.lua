@@ -315,6 +315,8 @@ function api.create_robot_environment(pos)
             end),
             place = libf(libox_computer.get_place(pos, meta, inv, owner)),
             dig = libf(libox_computer.get_break(pos, meta, inv, owner)),
+            drop = libf(libox_computer.get_drop(pos, meta, inv, owner)),
+
         }
     end
     for k, v in pairs(add) do base[k] = v end
