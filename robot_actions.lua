@@ -226,8 +226,8 @@ function libox_computer.get_place(pos, meta, inv, owner)
 end
 
 --[[
-    Now that we've got the place behaviour..... FUCK
-    okay we seriously need a unified library for all this shit....
+    Now that we've got the place behaviour..... AAAAAAAAAAAAAA
+    okay we seriously need a unified library for all this....
 ]]
 function libox_computer.get_break(pos, meta, inv, owner)
     return function(vec, name)

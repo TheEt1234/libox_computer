@@ -269,7 +269,8 @@ All positions are relative, in a range defined in settings (by default 30)
 - `get(pos)` - get a node
 
 Now, theese functions, if unsuccessful return a string, else they yield, then return a wait event  
-By default they wait 0.1 seconds, can be changed with the place/drop delay setting
+By default they wait 0.1 seconds, can be changed with the place/drop delay setting  
+The `pos` argument of theese functions is relative
 
 - `place(pos, name[, def])` - def is optional, places an item/node at that relative position, `def` contains `param2` and `up` or `down` or `west` or `east` or `auto`
 - `dig(pos, name)` - digs a node with a tool (the tool's name is in... name), does not wear out the tool, ***IGNORES THE SETTING, INSTEAD WAITING THE AMOUNT OF TIME IT TAKES TO BREAK THE NODE***
@@ -297,4 +298,6 @@ By default they wait 0.1 seconds, can be changed with the place/drop delay setti
 
 # What wont be happening
 - mesecon interraction: why mesecon when you can digi
-- ports/pins: would severely overcomplicate things
+- ports/pins: would severely overcomplicate things, maybe ""fake"" ports could be implemented if you think a direction vector looks intimidating
+- setfenv/getfenv: i am afraid of messing that up...
+- metatables: you can hide values inside them, oh and `getmetatable()` is not that fast to weigh things (needs to be verified actually), and also they just feel like they can be used to do some nasty stuff

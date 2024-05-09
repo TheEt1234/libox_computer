@@ -1,11 +1,9 @@
 --[[
     Defines/handles:
-        - settings
         - creating
         - executing
         - environment
         - yield behaviour
-    Basically a highly specific extension of libox
 ]]
 
 local api = {}
@@ -43,8 +41,12 @@ local function get_color_robot(pos)
 end
 
 local libf = libox.sandbox_lib_f
--- magic that makes a library function safe :tm: -- ok but more specifically it escapes the string sandbox and like does a bunch of stuff
+--[[
+    libf is used for functions that depend on (""):func syntax
+    and for functions that don't call user code
 
+    i "abuse" it here because it's better to have a function that has minor bloat than a security vurnability
+]]
 function api.create_laptop_environment(pos)
     local base = libox.create_basic_environment()
     local meta = minetest.get_meta(pos)
@@ -83,7 +85,7 @@ end
 local function curry(f, ...)
     -- only used to hide data conveniently in this case
     -- but basically see https://wiki.haskell.org/Currying
-    -- this is a simpler version of it
+    -- this is a simpler version of it i guess
     -- i think i might start using this more idk it seems so cool
     local og_arg_arr = { ... }
 
