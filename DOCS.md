@@ -91,7 +91,7 @@ it stops the sandbox
 Also... yeah the event returned...
 sort of like the luacontroller but still a little different
 
-Event types: `wait`, `await`, `digiline`, `terminal`, `gui`
+Event types: `wait`, `await`, `digiline`, `terminal`, `gui`, `error`
 
 # gui (touchscreen_message)
 - see [touchscreen docs](https://github.com/mt-mods/digistuff/blob/master/docs/touchscreen.md)
@@ -244,8 +244,9 @@ All positions are relative, in a range defined in settings (by default 30)
 - dig(pos, name) - digs a node with a tool (the tool's name is in... name), does not wear out the tool
 - drop(pos, name) - drops a node
 ### If you are worried about lag:
+
 - all the node.* functions get accounted for their lag, so it respects the 3ms limit
 
 ### If you are worried about balance:
 - You can set a setting that will force the world modifying functions to wait more
-- The dig_node function will *always* wait the amount of time the tool takes to destroy the node, keep that in mind *when limiting the other actions..., don't make placing take 2x more as digging... :>*
+- The dig_node function will *always* wait the amount of time the tool takes to destroy the node, keep that in mind *when limiting the other actions..., so don't make placing take 2x more as digging... :>*

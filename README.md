@@ -32,5 +32,5 @@ Textures
 
 # Todos (not in order)
 
-- more environment stuffs maybe?
 - T E S T S
+- maybe more robot features

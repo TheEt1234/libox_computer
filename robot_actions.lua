@@ -4,8 +4,10 @@
 ]]
 
 if not minetest.global_exists("pipeworks") then
-    return
+    return false -- cannot operate without pipeworks:create_fake_player
+    -- alternative: scan all of _G for a function named create_fake_player
 end
+
 -- straight out of pipeworks
 local can_tool_dig_node = function(nodename, toolcaps)
     local nodedef = minetest.registered_nodes[nodename]
@@ -338,8 +340,4 @@ function libox_computer.get_drop(pos, meta, inv, owner)
             time = settings.set_node_delay
         })
     end
-end
-
-function libox_computer.get_formspec_interract(pos, meta, inv, owner)
-
 end

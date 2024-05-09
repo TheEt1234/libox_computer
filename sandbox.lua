@@ -199,10 +199,9 @@ function api.create_robot_environment(pos)
         inv = {
             is_empty = libf(curry(inv.is_empty, inv, "main")),
             get_size = libf(curry(inv.get_size, inv, "main")),
-            get_stack =
-                libf(get_safe_ItemStack(
-                    curry(inv.get_stack, inv, "main")
-                )),
+            get_stack = libf(get_safe_ItemStack(
+                curry(inv.get_stack, inv, "main")
+            )),
             get_list = libf(convert_to_safe_itemstacks(curry(inv.get_list, inv, "main"))),
 
             room_for_item = libf(curry(inv.room_for_item, inv, "main")),
