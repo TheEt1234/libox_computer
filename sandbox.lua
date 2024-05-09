@@ -432,8 +432,6 @@ yield_logic_funcs.move = {
         rpos = is_valid_rpos,
     },
     f = function(pos, meta, id, args)
-        local HARDCODED_MOVE_TIME = 0.1
-
         local rpos = args.rpos
 
         local use_pos = pos + vector.new(rpos.x, rpos.y, rpos.z)
@@ -466,7 +464,7 @@ yield_logic_funcs.move = {
         libox_computer.ui(meta)
 
         meta:set_int("is_waiting", 1) -- ignore all incoming events
-        mesecon.queue:add_action(pos, "lb_wait", { id }, HARDCODED_MOVE_TIME, id, 1)
+        mesecon.queue:add_action(pos, "lb_wait", { id }, settings.set_node_delay, id, 1)
     end
 }
 
