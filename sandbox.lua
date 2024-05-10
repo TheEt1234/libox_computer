@@ -437,12 +437,13 @@ yield_logic_funcs.move = {
         local rpos = args.rpos
 
         local use_pos = pos + vector.new(rpos.x, rpos.y, rpos.z)
-        local node = minetest.get_node(use_pos)
+        local use_node = minetest.get_node(use_pos)
+        local current_node = minetest.get_node(pos)
 
-        if minetest.registered_nodes[node.name].buildable_to == false then
+        if minetest.registered_nodes[use_node.name].buildable_to == false then
             return "There is already a solid node there"
         end
-        if node.name == "ignore" then
+        if use_node.name == "ignore" then
             return "Area wasn't loaded"
         end
         -- ok cool we can override the node now i guess
@@ -452,14 +453,15 @@ yield_logic_funcs.move = {
             return "Protected."
         end
 
+
         -- now how do we "swap" the node use_pos with pos
         -- idk lmao
 
+
         -- how about we use the aproach that the mesecons mvps did
         local metatable = meta:to_table()
-        local og_node = minetest.get_node(pos)
         minetest.remove_node(pos)
-        minetest.set_node(use_pos, og_node)
+        minetest.set_node(use_pos, current_node)
         pos = use_pos
         meta = minetest.get_meta(pos)
         meta:from_table(metatable)
@@ -570,7 +572,6 @@ mesecon.queue:add_function("lb_wait", function(pos, id)
         type = "wait"
     })
 end)
-
 mesecon.queue:add_function("lb_err", function(pos, id, errmsg)
     if libox.coroutine.is_sandbox_dead(id) then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
     minetest.get_meta(pos):set_int("is_waiting", 0)
@@ -579,16 +580,12 @@ mesecon.queue:add_function("lb_err", function(pos, id, errmsg)
         errmsg = errmsg,
     })
 end)
-
 mesecon.queue:add_function("lb_await", function(pos, id)
     if libox.coroutine.is_sandbox_dead(id) then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
     api.run_sandbox(pos, {
         type = "await"
     })
 end)
-
-
-
 mesecon.queue:add_function("lb_digiline_relay", function(pos, channel, msg)
     local id = minetest.get_meta(pos):get_string("ID")
     if libox.coroutine.is_sandbox_dead(id) then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.

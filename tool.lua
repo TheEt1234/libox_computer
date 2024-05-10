@@ -17,9 +17,10 @@ local function random_with_random_sign()
     return math.random() * random_sign()
 end
 
+
 local function default_on_use(user, pointed_thing)
     local user = user:get_player_name()
-    if pointed_thing.type == "nothing" then return end
+    if pointed_thing.type ~= "node" then return end
     local under = pointed_thing.under
     if minetest.is_protected(under, user) then
         minetest.record_protection_violation(under, user)
@@ -59,7 +60,7 @@ end
 
 local function default_on_place(user, pointed_thing)
     local user = user:get_player_name()
-    if pointed_thing.type == "nothing" then return end
+    if pointed_thing.type ~= "node" then return end
     local under = pointed_thing.under
     if minetest.is_protected(under, user) then
         minetest.record_protection_violation(under, user)

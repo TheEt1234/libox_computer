@@ -46,7 +46,7 @@ local function ui(meta)
                 .. "listring[]"
         end
         meta:set_string("formspec", fs)
-        meta:set_string("errmsg", "")
+        --meta:set_string("errmsg", "")
     end
 end
 
@@ -87,6 +87,7 @@ local function on_receive_fields(pos, _, fields, sender)
                 msg = fields.terminal_input
             })
         elseif fields.halt then
+            meta:set_string("errmsg", "")
             libox.coroutine.active_sandboxes[meta:get_string("ID")] = nil
             ui(meta)
         elseif fields.show_gui then

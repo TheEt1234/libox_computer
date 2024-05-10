@@ -6,8 +6,8 @@
 -- oh god so much code to rework.... its better if i just delete it and start over
 
 -- also, new command
--- {command = "formspec", rawtext = "label[blabla]"}
-
+-- {command = "formspec", text = "label[blabla]"}
+-- and a new element, the list element
 
 -- `minetest.formspec_escape` with option to not escape commas
 local function fs_escape(text, is_list)
