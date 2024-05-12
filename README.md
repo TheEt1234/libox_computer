@@ -1,6 +1,9 @@
 # Libox_computer
 
-basically a mooncontroller + digilines touchscreen + libox coroutine sandboxes
+A mod offering:
+  - Libox laptop: a mix of mooncontroller, digistuff touchscreen and libox coroutine sandboxes
+  - Libox robot: Libox laptop but can move and interract with pipeworks
+  - Laptop programmer: when clicked on a robot/laptop it will restore the original programming UI, when shift+right clicked it will stop the robot/laptop, useful if you've got an out of control robot moving and dont have a nerve to wait until it reaches some unloaded mapblocks
 
 see DOCS.md for actual documentation and introduction
 
