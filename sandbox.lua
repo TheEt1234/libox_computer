@@ -172,7 +172,6 @@ function api.create_robot_environment(pos)
     meta:set_string("term_text", "")
 
     local add = {
-        traceback = debug.traceback, -- libox.traceback is unsafe to expose, and like... lets give the chance SOME WAY to debug generic errors
         pos = vector.copy(pos),
         yield = coroutine.yield,
         print = libf(libox_computer.get_print(meta)),

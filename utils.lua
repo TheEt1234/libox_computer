@@ -10,6 +10,7 @@ end
 
 function libox_computer.report_error(meta, text, preceeding_text)
     local preceeding_text = preceeding_text or "[ERROR] "
+    text = libox.shorten_path(tostring(text) or "")
     libox_computer.raw_print(meta, preceeding_text .. text .. "\n")
     meta:set_string("errmsg", text)
     libox_computer.ui(meta)
