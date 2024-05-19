@@ -587,7 +587,7 @@ mesecon.queue:add_function("lb_await", function(pos, id)
 end)
 mesecon.queue:add_function("lb_digiline_relay", function(pos, channel, msg)
     local id = minetest.get_meta(pos):get_string("ID")
-    if libox.coroutine.is_sandbox_dead(id) then return end -- server restart maybe? but that doesn't matter because the sandbox is gone.
+    --    if libox.coroutine.is_sandbox_dead(id) then return end -- we don't need this check.... we don't need this digiline relay either actually
     digilines.receptor_send(pos, digiline.rules.default, channel, msg)
 end)
 

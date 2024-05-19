@@ -286,18 +286,16 @@ The `pos` argument of theese functions is relative
 
 # What to report as a bug
 
-- If it's not covered in the common troubleshooting page, then please report it as a bug
-- Also, if you can hide and retrieve some data inside a userdata object or a metatable, ***it's a bug***
-- if you obtain the ItemStack userdata, ***it's a bug***
+- If it's not covered in the common troubleshooting page and feels un-intended or abusable, then please report it as a bug
+- If you can hide some data inside userdata, ***it's a bug***
+    - if you obtain userdata that you can write to directly, it's probably a bug
 
 # Common troubleshooting
-- It says i need this mystery libox thing, it doesn't appear in minetest mod search
-    - libox is not yet uploaded to contentDB, in the meantime download it from [here](https://github.com/TheEt1234/libox)
 - The sandbox doesn't weigh local variables
     - You need to add libox to trusted mods for it to expose and use `debug.getlocal` and `debug.getupvalue`
 
 # What wont be happening
 - mesecon interraction: why mesecon when you can digi
-- ports/pins: would severely overcomplicate things, maybe ""fake"" ports could be implemented if you think a direction vector looks intimidating
+    - mesecon interraction would require 16 nodes for the laptop and robot too... not ideal....
 - setfenv/getfenv: i am afraid of messing that up...
-- metatables: you can hide values inside them, oh and `getmetatable()` is not that fast to weigh things (needs to be verified actually), and also they just feel like they can be used to do some nasty stuff
+- metatables: you can hide values inside them, oh and `getmetatable()` is not that fast so weighing things would be slow (needs to be verified actually), and also i just feel like they can be used to do some nasty stuff

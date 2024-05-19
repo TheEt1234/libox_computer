@@ -1,3 +1,5 @@
+local settings = libox_computer.settings
+
 function libox_computer.wrap(f)
     setfenv(f, {}) -- make the function have to import its environment
     return f
@@ -18,23 +20,22 @@ end
 
 function libox_computer.get_digiline_send(pos)
     return function(channel, msg)
-        if type(channel) == "string" then
-            if #channel > settings.chan_maxlen then
-                return "Channel string too long"
-            elseif (type(channel) ~= "string" and type(channel) ~= "number" and type(channel) ~= "boolean") then
-                return "Channel must be string, number or boolean."
-            end
-            local msg, msg_cost = libox.digiline_sanitize(msg, settings.allow_functions_in_digiline_messages,
-                libox_computer.wrap)
-            if msg == nil or msg_cost > settings.maxlen then
-                return "Too complex or contained invalid data"
-            end
+        if type(channel) ~= "string" and type(channel) ~= "number" and type(channel) ~= "boolean" then
+            return "Channel must be string, number or boolean."
+        end
+        if #channel > settings.chan_maxlen then
+            return "Channel string too long"
+        end
+        local msg, msg_cost = libox.digiline_sanitize(msg, settings.allow_functions_in_digiline_messages,
+            libox_computer.wrap)
+        if msg == nil or msg_cost > settings.maxlen then
+            return "Too complex or contained invalid data"
         end
         mesecon.queue:add_action(pos, "lb_digiline_relay", { channel, msg })
     end
 end
 
-function libox_computer.get_print(meta) -- mooncontroller like
+function libox_computer.get_print(meta) -- from mooncontroller
     return function(param, nolf)
         if param == nil then param = "" end
         local delim = "\n"
@@ -53,15 +54,13 @@ end
 
 function libox_computer.safe_coroutine_resume(...)
     --[[
-    THIS USES RAW PCALL..... AAND CALLS STUFF FROM THE USER
-    so we need to be very careful
-    and by that i mean we can't use sandbox_lib_f because that will allow the user to (""):rep(math.huge)
-]]
-    local retvalue = {
+        Can't use libox.sandbox_lib_f on this because it runs user code
+    ]]
+    local retvalues = {
         coroutine.resume(co, ...)
     }
     if not debug.gethook() then
         error("Code timed out! (from coroutine.resume)", 2)
     end
-    return retvalue
+    return unpack(retvalues)
 end

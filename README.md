@@ -3,8 +3,7 @@
 A mod offering:
   - Libox laptop: a mix of mooncontroller, digistuff touchscreen and libox coroutine sandboxes
   - Libox robot: Libox laptop but can move and interract with pipeworks
-  - Laptop programmer: when clicked on a robot/laptop it will restore the original programming UI, when shift+right clicked it will stop the robot/laptop, useful if you've got an out of control robot moving and dont have a nerve to wait until it reaches some unloaded mapblocks
-
+  - Laptop programmer: when clicked on a robot/laptop it will restore the original programming UI, when shift+right clicked it will stop the robot/laptop
 see DOCS.md for actual documentation and introduction
 
 # Support/Dependancies
@@ -18,13 +17,11 @@ see DOCS.md for actual documentation and introduction
 ## Robot's depends
 
 - pipeworks: everybody uses them and its perfect for me so... also without pipeworks the robot cant perform node modifying actions (relies on fake player) and injecting items
-- tubelib2: i will not add tubelib2 compatibility into this mod, unless someone submits a pull request and tests it
-
 # License/credits
 
 - Code (Unless stated otherwise) - LGPLv3
 
-- Inspiration - [LWcomputers](https://github.com/loosewheel/lwcomputers/) (but today lwcomputers is abadoned and filled with ways to bypass the time limit)
+- Inspiration - [LWcomputers](https://github.com/loosewheel/lwcomputers/) (but today lwcomputers is abadoned and filled with ways to bypass the instruction limit)
 
 - robot_actions.lua - based off digibuilder and pipeworks way of doing things (pipeworks is licensed under LGPLv3, while digibuilder is licensed under MIT)
 - Ui - based off mooncontroller's ui - [mooncontroller's ui.lua](https://github.com/mt-mods/mooncontroller/blob/master/ui.lua) - LGPLv3

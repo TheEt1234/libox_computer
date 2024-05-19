@@ -57,14 +57,13 @@ minetest.register_node(libox_computer.basename_robot, {
         receptor = {},
         effector = {
             action = function(pos, _, channel, msg)
-                local msg, _cost = libox.digiline_sanitize(msg,
-                    libox_computer.settings.allow_functions_in_digiline_messages, libox_computer.wrap)
+                msg = libox.digiline_sanitize(msg, libox_computer.settings.allow_functions_in_digiline_messages,
+                    libox_computer.wrap)
                 libox_computer.sandbox.wake_up_and_run(pos, {
                     type = "digiline",
                     channel = channel,
                     msg = msg
                 })
-                -- digilines wake the sandbox up now... yes... and yes its not as unbalanced as one may believe
             end
         }
     },
