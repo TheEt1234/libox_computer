@@ -1,11 +1,9 @@
 --[[
-    Stupidly complex
-    Minetest is hell....
+    not the best code...
 ]]
 
 if not minetest.global_exists("pipeworks") then
     return false -- cannot operate without pipeworks:create_fake_player
-    -- alternative: scan all of _G for a function named create_fake_player
 end
 
 -- straight out of pipeworks
@@ -76,7 +74,7 @@ local function is_vector_within_range(vec)
     })
 end
 
-function libox_computer.get_place(pos, meta, inv, owner)
+function libox_computer.get_place(pos, inv, owner)
     return function(vec, name, def)
         if not is_vector_within_range(vec) then
             return "Vector not in range."
@@ -229,7 +227,7 @@ end
     Now that we've got the place behaviour..... AAAAAAAAAAAAAA
     okay we seriously need a unified library for all this....
 ]]
-function libox_computer.get_break(pos, meta, inv, owner)
+function libox_computer.get_break(pos, inv, owner)
     return function(vec, name)
         -- name is the name of the tool
         if not is_vector_within_range(vec) then
@@ -249,6 +247,7 @@ function libox_computer.get_break(pos, meta, inv, owner)
         end
 
         local tool = inv:get_stack("main", index)
+        local tool_def = minetest.registered_items[tool:get_name()] or {}
         local old_tool_stack = ItemStack(tool)
         local node = minetest.get_node(absolute_pos)
 
@@ -257,9 +256,6 @@ function libox_computer.get_break(pos, meta, inv, owner)
             return "Target unknown"
         end
 
-        if not node_def.on_dig then
-            return "Can't dig that node (missing on_dig)"
-        end
 
         local player = pipeworks.create_fake_player({
             name = owner,
@@ -269,36 +265,55 @@ function libox_computer.get_break(pos, meta, inv, owner)
             position = vector.subtract(absolute_pos, vector.new(0, 1.5, 0)),
         })
 
-        local dig_params = can_tool_dig_node(node.name, tool:get_tool_capabilities(), tool:get_name())
-        if dig_params and dig_params.diggable then
-            node_def.on_dig(absolute_pos, node, player)
+        local pointed_thing = {
+            type = "node",
+            under = absolute_pos,
+            above = absolute_pos
+        }
+
+        local dig_params
+        if tool_def.on_use then
+            tool = tool_def.on_use(tool, player, pointed_thing) or tool
+            inv:set_stack("main", index, tool)
         else
-            return "Can't dig that node"
+            if not node_def.on_dig then
+                return "Can't dig that node (missing on_dig)"
+            end
+            dig_params = can_tool_dig_node(node.name, tool:get_tool_capabilities(), tool:get_name())
+
+            if dig_params and dig_params.diggable then
+                node_def.on_dig(absolute_pos, node, player)
+            else
+                return "Can't dig that node"
+            end
         end
 
         local wieldname = tool:get_name()
         if wieldname == old_tool_stack:get_name() then
-            if tool:get_count() == tool:get_count() and
-                tool:get_metadata() == tool:get_metadata() and
+            if tool:get_count() == old_tool_stack:get_count() and
+                tool:get_metadata() == old_tool_stack:get_metadata() and
                 ((minetest.registered_items[tool:get_name()] or {}).wear_represents or "mechanical_wear") == "mechanical_wear" then
                 inv:set_stack("main", index, old_tool_stack)
             end
         elseif wieldname ~= "" then
-            -- "tool got replaced?"
-            -- "nahh its a drop"
-            -- - pipeworks
-            -- probably i should stick with that
-            return_stack(pos, inv, overflow)
+            -- tool got replaced, treat it as a drop
+            inv:set_stack("main", index, tool)
+        end
+        local time
+        if dig_params then
+            time = dig_params.time
+        else
+            time = settings.set_node_delay
         end
 
         return coroutine.yield({
             type = "wait",
-            time = dig_params.time or settings.set_node_delay
+            time = time
         })
     end
 end
 
-function libox_computer.get_drop(pos, meta, inv, owner)
+function libox_computer.get_drop(pos, inv, owner)
     return function(vec, name)
         if not is_vector_within_range(vec) then
             return "Vector not in range."

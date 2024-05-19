@@ -20,7 +20,7 @@ local function get_color_laptop(pos)
 
         local node = minetest.get_node(pos)
 
-        node.param2 = math.floor(node.param2 % 4 + n * 4) -- ah math, see minetest api documentation, but basically trust me bro
+        node.param2 = math.floor(node.param2 % 4 + n * 4)
         minetest.swap_node(pos, node)
     end
 end
@@ -35,7 +35,7 @@ local function get_color_robot(pos)
 
         local node = minetest.get_node(pos)
 
-        node.param2 = math.floor(node.param2 % 32 + n * 32) -- ah math, see minetest api documentation, but basically trust me bro
+        node.param2 = math.floor(node.param2 % 32 + n * 32)
         minetest.swap_node(pos, node)
     end
 end
@@ -46,6 +46,7 @@ local libf = libox.sandbox_lib_f
     and for functions that don't call user code
 
     i "abuse" it here because it's better to have a function that has minor bloat than a security vurnability
+
 ]]
 function api.create_laptop_environment(pos)
     local base = libox.create_basic_environment()
@@ -64,9 +65,7 @@ function api.create_laptop_environment(pos)
         heat_max = settings.heat_max,
         color_laptop = libf(get_color_laptop(pos)),
 
-        gui = libf(
-            libox_computer.touchscreen_protocol.get_touchscreen_ui(meta)
-        ),
+        gui = libf(libox_computer.touchscreen_protocol.get_touchscreen_ui(meta)),
 
         code = meta:get_string("code"),
         mem = mem,
@@ -313,9 +312,9 @@ function api.create_robot_environment(pos)
 
                 return table.copy(minetest.get_node(pos + rpos))
             end),
-            place = libf(libox_computer.get_place(pos, meta, inv, owner)),
-            dig = libf(libox_computer.get_break(pos, meta, inv, owner)),
-            drop = libf(libox_computer.get_drop(pos, meta, inv, owner)),
+            place = libf(libox_computer.get_place(pos, inv, owner)),
+            dig = libf(libox_computer.get_break(pos, inv, owner)),
+            drop = libf(libox_computer.get_drop(pos, inv, owner)),
 
         }
     end

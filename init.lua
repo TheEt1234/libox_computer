@@ -36,6 +36,5 @@ dofile(MP .. "/utils.lua")
 dofile(MP .. "/sandbox.lua")
 dofile(MP .. "/frontend.lua")
 
-dofile(MP .. "/laptop.lua")
-dofile(MP .. "/robot.lua")
+dofile(MP .. "/registrations.lua")
 dofile(MP .. "/tool.lua")
