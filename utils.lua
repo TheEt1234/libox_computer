@@ -11,7 +11,7 @@ function libox_computer.raw_print(meta, text)
 end
 
 function libox_computer.report_error(meta, text, preceeding_text)
-    local preceeding_text = preceeding_text or "[ERROR] "
+    preceeding_text = preceeding_text or "[ERROR] "
     text = libox.shorten_path(tostring(text) or "")
     libox_computer.raw_print(meta, preceeding_text .. text .. "\n")
     meta:set_string("errmsg", text)
@@ -26,7 +26,8 @@ function libox_computer.get_digiline_send(pos)
         if #channel > settings.chan_maxlen then
             return "Channel string too long"
         end
-        local msg, msg_cost = libox.digiline_sanitize(msg, settings.allow_functions_in_digiline_messages,
+        local msg_cost
+        msg, msg_cost = libox.digiline_sanitize(msg, settings.allow_functions_in_digiline_messages,
             libox_computer.wrap)
         if msg == nil or msg_cost > settings.maxlen then
             return "Too complex or contained invalid data"

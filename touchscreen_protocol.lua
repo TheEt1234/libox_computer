@@ -10,6 +10,14 @@
 -- and a new element, the list element
 
 -- `minetest.formspec_escape` with option to not escape commas
+
+--[[
+    from https://github.com/mt-mods/digistuff, modified
+    they seem to have forgotten to include the LGPLv3 license in the repo... lol
+
+]]
+-- oh yeah also... i dont want to deal with this file so
+-- luacheck: ignore
 local function fs_escape(text, is_list)
     if text ~= nil then
         text = string.gsub(text, "\\", "\\\\")

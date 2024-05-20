@@ -16,7 +16,7 @@ local function get_color_laptop(pos)
         if n < 0 then return false end
         if n > 64 then return false end -- 64 COLORZ!!!
 
-        local n = math.floor(n)
+        n = math.floor(n)
 
         local node = minetest.get_node(pos)
 
@@ -31,7 +31,7 @@ local function get_color_robot(pos)
         if n < 0 then return false end
         if n > 8 then return false end -- only 8 colors
 
-        local n = math.floor(n)
+        n = math.floor(n)
 
         local node = minetest.get_node(pos)
 
@@ -91,7 +91,7 @@ local function curry(f, ...)
     return function(...)
         local will_be_supplied = table.copy(og_arg_arr)
         local supplied = { ... }
-        for k, v in ipairs(supplied) do
+        for _, v in ipairs(supplied) do
             will_be_supplied[#will_be_supplied + 1] = v
         end
         return f(unpack(will_be_supplied))
@@ -142,7 +142,7 @@ local function is_valid_rpos(rpos)
         { x = 0,  y = 0,  z = 1 },
         { x = 0,  y = 0,  z = -1 }
     }
-    for k, v in ipairs(valid_rpos_arr) do
+    for _, v in ipairs(valid_rpos_arr) do
         if rpos.x == v.x and rpos.y == v.y and rpos.z == v.z then return true end
     end
     return false
@@ -389,7 +389,7 @@ local function remove_functions(obj)
 end
 
 function api.save_mem(meta, mem)
-    local mem = remove_functions(mem) -- safe because we remove the fun stuff
+    mem = remove_functions(mem) -- safe because we remove the fun stuff
 
     -- we dont to validate mem for size, as the entire environment gets validated for it
     -- worst case mem is 20 megabytes
@@ -401,7 +401,7 @@ local yield_logic_funcs = {}
 
 yield_logic_funcs.stop = {
     types = {},
-    f = function(pos, meta, id)
+    f = function(_, meta, id)
         libox_computer.report_error(meta, "Sandbox stopped.")
         libox.coroutine.active_sandboxes[id] = nil
     end
@@ -421,7 +421,7 @@ yield_logic_funcs.await = {
     types = {
         time = "number"
     },
-    f = function(pos, meta, id, args)
+    f = function(pos, _, id, args)
         local time = args.time
         time = math.max(settings.min_delay, time)
         mesecon.queue:add_action(pos, "lb_await", { id }, time, id, 1)
@@ -585,10 +585,10 @@ mesecon.queue:add_function("lb_await", function(pos, id)
         type = "await"
     })
 end)
-mesecon.queue:add_function("lb_digiline_relay", function(pos, channel, msg)
-    local id = minetest.get_meta(pos):get_string("ID")
-    --    if libox.coroutine.is_sandbox_dead(id) then return end -- we don't need this check.... we don't need this digiline relay either actually
-    digilines.receptor_send(pos, digiline.rules.default, channel, msg)
-end)
+mesecon.queue:add_function("lb_digiline_relay",
+    function(pos, channel, msg)
+        -- really unsure if we need this
+        digilines.receptor_send(pos, digilines.rules.default, channel, msg)
+    end)
 
 libox_computer.sandbox = api

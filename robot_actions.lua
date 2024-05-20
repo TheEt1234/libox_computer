@@ -179,7 +179,7 @@ function libox_computer.get_place(robot_pos, inv, owner)
         end
 
         local itemstack
-        local success = false
+        local success = false -- luacheck:ignore
         local returnstack
         if place_node_def.on_place ~= minetest.item_place then
             -- non-default item placement, use custom function (crops, other items)

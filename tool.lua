@@ -19,7 +19,7 @@ end
 
 
 local function default_on_use(user, pointed_thing)
-    local user = user:get_player_name()
+    user = user:get_player_name()
     if pointed_thing.type ~= "node" then return end
     local under = pointed_thing.under
     if minetest.is_protected(under, user) then
@@ -59,7 +59,7 @@ end
 
 
 local function default_on_place(user, pointed_thing)
-    local user = user:get_player_name()
+    user = user:get_player_name()
     if pointed_thing.type ~= "node" then return end
     local under = pointed_thing.under
     if minetest.is_protected(under, user) then

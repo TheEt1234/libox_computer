@@ -4,7 +4,8 @@ globals = {
 }
 read_globals = {
     "minetest","vector", "ItemStack",
-    "mesecon", "pipeworks", "digilines"
+    "mesecon", "pipeworks", "digilines", "fakelib",
+    "table", "dump"
 }
 ignore = {
     "631" -- line too long
