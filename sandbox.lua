@@ -293,7 +293,8 @@ function api.create_robot_environment(pos)
 
             pipeworks.tube_inject_item(pos + rpos, pos, rpos, stack, owner, {})
         end)
-
+    end
+    if minetest.global_exists("fakelib") then
         add.node = {
             --[[
                 Assumbtion: all the positions in here are relative

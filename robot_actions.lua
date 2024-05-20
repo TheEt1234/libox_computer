@@ -1,12 +1,33 @@
---[[
-    not the best code...
-]]
-
-if not minetest.global_exists("pipeworks") then
-    return false -- cannot operate without pipeworks:create_fake_player
+if not minetest.global_exists("fakelib") then
+    return false
 end
 
--- straight out of pipeworks
+
+local settings = libox_computer.settings
+local function validate_and_return_position(pos)
+    local is_vec = fakelib.is_vector(pos, true)
+    if not is_vec then return false end
+
+    if not vector.in_area(pos, {
+            x = -settings.range,
+            y = -settings.range,
+            z = -settings.range
+        }, {
+            x = settings.range,
+            y = settings.range,
+            z = settings.range
+        }) then
+        return false
+    end
+
+    if minetest.is_nan(pos.x) then return false end
+    if minetest.is_nan(pos.y) then return false end
+    if minetest.is_nan(pos.z) then return false end
+    return pos
+end
+
+
+-- straight out of pipeworks, edited slightly
 local can_tool_dig_node = function(nodename, toolcaps)
     local nodedef = minetest.registered_nodes[nodename]
     -- don't explode due to nil def in event of unknown node!
@@ -61,35 +82,22 @@ local function return_stack(pos, inv, stack)
     end
 end
 
-local settings = libox_computer.settings
-local function is_vector_within_range(vec)
-    return vector.in_area(vec, {
-        x = -settings.range,
-        y = -settings.range,
-        z = -settings.range
-    }, {
-        x = settings.range,
-        y = settings.range,
-        z = settings.range
-    })
-end
 
-function libox_computer.get_place(pos, inv, owner)
-    return function(vec, name, def)
-        if not is_vector_within_range(vec) then
-            return "Vector not in range."
-        end
+function libox_computer.get_place(robot_pos, inv, owner)
+    return function(supplied_pos, name, def)
+        supplied_pos = validate_and_return_position(supplied_pos)
+        if not supplied_pos then return "Invalid position, must be relative and fit within range" end
 
 
-        local absolute_pos = pos + vec
+        local absolute_pos = supplied_pos + robot_pos
 
         if minetest.is_protected(absolute_pos, owner) then
             return "That area is protected"
         end
 
-        if type(name) ~= "string" then return "Invalid item" end
+        if type(name) ~= "string" then return "Invalid item name" end
         local index = best_inventory_index(inv, name)
-        if index == nil then
+        if not index then
             return "Item not found"
         end
 
@@ -132,7 +140,7 @@ function libox_computer.get_place(pos, inv, owner)
 
         -- so yeah screw that (how would i do degrotate anyway)
 
-        local player = pipeworks.create_fake_player({
+        local player = fakelib.create_player({
             name = owner,
             inventory = inv,
             wield_list = "main",
@@ -182,7 +190,7 @@ function libox_computer.get_place(pos, inv, owner)
             inv:set_stack("main", index, ItemStack(""))
             returnstack, success = place_node_def.on_place(ItemStack(itemstack), player, pointed_thing)
             if returnstack then
-                return_stack(pos, inv, returnstack)
+                return_stack(absolute_pos, inv, returnstack)
                 if returnstack:get_wear() ~= itemstack:get_wear()
                     or returnstack:get_name() ~= itemstack:get_name()
                     or returnstack:get_count() < itemstack:get_count() then
@@ -191,7 +199,7 @@ function libox_computer.get_place(pos, inv, owner)
             end
             if not success then
                 if not returnstack then
-                    return_stack(pos, inv, itemstack)
+                    return_stack(absolute_pos, inv, itemstack)
                 end
                 return "Item placement failed"
             end
@@ -223,24 +231,21 @@ function libox_computer.get_place(pos, inv, owner)
     end
 end
 
---[[
-    Now that we've got the place behaviour..... AAAAAAAAAAAAAA
-    okay we seriously need a unified library for all this....
-]]
-function libox_computer.get_break(pos, inv, owner)
-    return function(vec, name)
-        -- name is the name of the tool
-        if not is_vector_within_range(vec) then
-            return "Vector not in range."
-        end
+function libox_computer.get_break(robot_pos, inv, owner)
+    return function(supplied_pos, name)
+        supplied_pos = validate_and_return_position(supplied_pos)
+        if not supplied_pos then return "Invalid position, must be relative and fit within range" end
 
-        local absolute_pos = pos + vec
+        -- name is the name of the tool, maybe an amount could also be sneaked in but i dont think thats important
+
+        local absolute_pos = supplied_pos + robot_pos
 
         if minetest.is_protected(absolute_pos, owner) then
             return "That area is protected"
         end
 
         if type(name) ~= "string" then return "Invalid item" end
+
         local index = best_inventory_index(inv, name)
         if index == nil then
             return "Item not found"
@@ -257,7 +262,7 @@ function libox_computer.get_break(pos, inv, owner)
         end
 
 
-        local player = pipeworks.create_fake_player({
+        local player = fakelib.create_player({
             name = owner,
             inventory = inv,
             wield_list = "main",
@@ -313,13 +318,12 @@ function libox_computer.get_break(pos, inv, owner)
     end
 end
 
-function libox_computer.get_drop(pos, inv, owner)
-    return function(vec, name)
-        if not is_vector_within_range(vec) then
-            return "Vector not in range."
-        end
+function libox_computer.get_drop(robot_pos, inv, owner)
+    return function(supplied_pos, name)
+        supplied_pos = validate_and_return_position(supplied_pos)
+        if not supplied_pos then return "Invalid position, must be relative and fit within range" end
 
-        local absolute_pos = pos + vec
+        local absolute_pos = supplied_pos + robot_pos
 
         if minetest.is_protected(absolute_pos, owner) then
             return "That area is protected"
@@ -335,11 +339,12 @@ function libox_computer.get_drop(pos, inv, owner)
         if item_def == nil then
             return "Unknown item."
         end
+
         if not item_def.on_drop then
             return "Can't drop this item (no on_drop)."
         end
 
-        local player = pipeworks.create_fake_player({
+        local player = fakelib.create_player({
             name = owner,
             inventory = inv,
             wield_list = "main",

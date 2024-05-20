@@ -292,7 +292,7 @@ The `pos` argument of theese functions is relative
 
 # Common troubleshooting
 - The sandbox doesn't weigh local variables
-    - You need to add libox to trusted mods for it to expose and use `debug.getlocal` and `debug.getupvalue`
+    - You need to add libox to trusted mods for it to expose and use `debug.getlocal` and `debug.getupvalue` and use those to weigh the sandbox
 
 # What wont be happening
 - mesecon interraction: why mesecon when you can digi

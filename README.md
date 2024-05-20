@@ -14,9 +14,12 @@ see DOCS.md for actual documentation and introduction
 - it also depends on [libox](https://github.com/TheEt1234/libox) for the coroutine sandboxing
   - optionally, not so much if you are a server... you can make libox a trusted mod and it will weigh the local variables and upvalues of the coroutine
 
-## Robot's depends
+## Robot's dependancies
 
-- pipeworks: everybody uses them and its perfect for me so... also without pipeworks the robot cant perform node modifying actions (relies on fake player) and injecting items
+- pipeworks: everybody uses them and its perfect for me so....
+- fakelib: for fake player support... so that the robot can do things that require... a player
+
+
 # License/credits
 
 - Code (Unless stated otherwise) - LGPLv3
@@ -33,6 +36,8 @@ Textures
 
 # Todos (not in order)
 
+- wait for a good fake player library (fakelib seems promising)
 - better code
 - T E S T S
 - maybe more robot features
+- cbd release (needs a good fake player library)
