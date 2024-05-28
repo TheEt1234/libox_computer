@@ -2,14 +2,17 @@
 libox_computer_time_limit (Time limit, in microseconds) int 3000
 
 # The size limit of the sandbox's environment, local variables and upvalues, if libox is trusted, in megabytes
-libox_computer_size_limit (Size limit, in megabytes) int 5
+libox_computer_size_limit (Size limit, in megabytes) int 1
 
 # They also get rid of their environment, and cannot be exported to luacontrollers
 libox_computer_allow_functions (Allow functions in digilines) bool false
 
 libox_computer_sandbox_delay (Delay between sandbox activation, in seconds) int 5
 
-libox_computer_range (Range of the robot) int 30
+libox_computer_range (Range of the robot's actions) int 3
 
 # Digging uses it's own system, based on the tool
 libox_computer_set_node_delay (Place/drop node delay of the robot) float 0.1
+
+
+libox_computer_allow_robots (Allow the use of robots) bool true

@@ -334,8 +334,13 @@ function api.create_sandbox(pos) -- position, not meta, because create_environme
     if is_laptop then
         env = api.create_laptop_environment(pos)
     else
+        if not settings.allow_robots then
+            libox_computer.report_error(meta, "Robots are disabled on this server!")
+            return
+        end
         env = api.create_robot_environment(pos)
     end
+
 
     local ID = libox.coroutine.create_sandbox({
         code = code,
@@ -587,7 +592,6 @@ mesecon.queue:add_function("lb_await", function(pos, id)
 end)
 mesecon.queue:add_function("lb_digiline_relay",
     function(pos, channel, msg)
-        -- really unsure if we need this
         digilines.receptor_send(pos, digilines.rules.default, channel, msg)
     end)
 

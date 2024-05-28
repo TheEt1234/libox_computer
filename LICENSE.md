@@ -10,6 +10,8 @@ LGPLv3 can be found down in this file
 pipeworks is licensed under LGPLv3
 digibuilder is licensed under the MIT license *`that was said in digibuilder's readme`*
 
+`support.lua` - Has code from metatool and the wrench mod, see the file for the licenses
+
 # Media
 
 All (unless specified differently) is licensed under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)

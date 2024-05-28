@@ -98,6 +98,9 @@ if minetest.get_modpath("pipeworks") then
     pipeworks_transform = "^pipeworks_tube_connection_metallic.png"
 end
 
+local function bool2num(x)
+    if x then return 1 else return 0 end
+end
 
 minetest.register_node(libox_computer.basename_robot, {
     description = "Libox robot",
@@ -132,6 +135,7 @@ minetest.register_node(libox_computer.basename_robot, {
         cracky = 1,
         tubedevice = 1,
         tubedevice_receiver = 1,
+        not_in_creative_inventory = bool2num(not libox_computer.settings.allow_robots),
     },
     sunlight_propagates = true,
     is_luacontroller = false, -- yeah, it's not a luacontroller

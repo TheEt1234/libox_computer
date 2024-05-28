@@ -1,4 +1,14 @@
 local settings = minetest.settings
+
+local function get_bool_setting_or_default(settingname, default)
+    local s = minetest.settings:get_bool(settingname)
+    if s == nil then
+        return default
+    else
+        return s
+    end
+end
+
 libox_computer = {
     basename_laptop = "libox_computer:laptop",
     basename_robot = "libox_computer:robot",
@@ -15,10 +25,11 @@ libox_computer = {
         heat_max = mesecon.setting("overheat_max", 20),
         cooldown_time = mesecon.setting("cooldown_time", 2.0),
         cooldown_step = mesecon.setting("cooldown_granularity", 0.5),
-        allow_functions_in_digiline_messages = settings:get("libox_computer_allow_functions") or false,
+        allow_functions_in_digiline_messages = get_bool_setting_or_default("libox_computer_allow_functions", false),
         sandbox_delay = settings:get_bool("libox_computer_sandbox_delay") or 5,
-        range = tonumber(settings:get("libox_computer_range")) or 30, -- double the digibuilder
+        range = tonumber(settings:get("libox_computer_range")) or 3,
         set_node_delay = tonumber(settings:get("libox_computer_set_node_delay")) or 0.1,
+        allow_robots = get_bool_setting_or_default("libox_computer_allow_robots", true)
     }
 }
 
@@ -38,3 +49,5 @@ dofile(MP .. "/frontend.lua")
 
 dofile(MP .. "/registrations.lua")
 dofile(MP .. "/tool.lua")
+
+dofile(MP .. "/support.lua")
