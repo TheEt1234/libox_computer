@@ -2,8 +2,8 @@
 
 A mod offering
 - Libox laptop
-  - A sort of... luacontroller i guess you could say... with a digistuff touchscreen on top
-  - Inspired by the lwcomputers mod, `but without the horrible text inputting` and filesystem stuff, you can code that stuff
+ - A sort of... luacontroller i guess you could say... with a digistuff touchscreen on top
+  - Inspired by the lwcomputers mod, `but without the horrible text inputting`, and without the filesystem stuff
 - Libox robot
   - Like the libox laptop, but has an inventory and can interract with the world
 
