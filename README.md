@@ -15,7 +15,7 @@ A mod offering
   - When the sandbox errors or stops, it dies
 - If the sandbox is not found (say, during a digiline or a gui event) then it will "wake up"
   - What that means is it will start the sandbox again, `mem` will still be kept as it was before, you can't kill and start sandboxes in a short time frame, limit is configured by settings
-- Has the [digistuff touchscreen protocol](https://github.com/mt-mods/digistuff/blob/master/docs/touchscreen.md) built in
+- Has the [mt-mods digistuff touchscreen protocol](https://github.com/mt-mods/digistuff/blob/master/docs/touchscreen.md) built in
   - And has even some extra commands
 - Uses libox, and environment is mostly handled by libox
   - This means you get extra stuffs to play with and also the sandbox is limited by time, not instructions

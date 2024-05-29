@@ -42,6 +42,8 @@ tl;dr you can *pause* the sandbox*, then it starts again, and that is the way yo
 
 "limit" - The sandbox has a time/memory limit
 
+"digistuff" - i am not refering to abadoned chiepie's (the one that's on contentDB) digistuff here, i am referring to the mt-mods's fork of digistuff, that you can find [here](https://github.com/mt-mods/digistuff), but it is backwards compatible
+
 # What is the libox programmer tool?
 - If you left click a laptop/robot with it, it will return to regular ui
 - If you shift+right click a laptop/robot with it, it will stop the sandbox and return to the regular ui
