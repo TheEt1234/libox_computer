@@ -25,7 +25,7 @@ if minetest.global_exists("wrench") then
         description = function()
             return S("Laptop with code")
         end,
-        before_pickup = function(pos, meta, node, player)
+        before_pickup = function(_, meta, _, _)
             local ID = meta:get_string("ID")
             libox.coroutine.active_sandboxes[ID] = nil
             meta:set_string("ID", "")

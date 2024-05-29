@@ -37,6 +37,10 @@ if tonumber(settings:get("libox_computer_size_limit")) then
     libox_computer.settings.size_limit = 1024 * 1024 * tonumber(settings:get("libox_computer_size_limit"))
 end
 
+if not minetest.global_exists("jit") then
+    minetest.log("warn",
+        "[libox_computer] Minetest not compiled with luajit, libox_computer with PUC lua is not officially supported")
+end
 
 
 local MP = minetest.get_modpath(minetest.get_current_modname())

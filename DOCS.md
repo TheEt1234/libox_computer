@@ -1,10 +1,50 @@
 # So... you code a little differently here...
 
-todo:
+You can stop the sandbox at any time, that means if you run this code:
+```lua
+function really_expensive_function()
+    for i=1,1000 do
+        if i%100 == 0 then
+            _event = yield(0) -- wait the minimum amount of time allowed
+        end
+    end
+    return ":D"
+end
+print(really_expensive_function())
+```
+You will get a `:D` in the terminal  
+
+This is how you do events actually...
+```lua
+    while true do
+        event = yield() -- when ran without arguments, it will wait for an event, then return it
+        ....your code stuff
+    end
+```
+
+### also we get a yucky with a JIT vs PUC lua difference...
+
+luaJIT claims to be fully resumable  
+"The LuaJIT VM is fully resumable. This means you can yield from a coroutine even across contexts, where this would not possible with the standard Lua 5.1 VM: e.g. you can yield across pcall() and xpcall(), across iterators and across metamethods. " - https://luajit.org/extensions.html
+
+But Normal lua might not be... **libox_computer has not been tested with minetest's lua, thus not officially supported**
+
+# So basically,
+
+tl;dr you can *pause* the sandbox*, then it starts again, and that is the way you get events
+ 
+
+## Definitions
+
+"waking up the sandbox" - sandbox will get created, this has a limit of 5 seconds by default, the `program` button bypasses it
+
+"overheat the sandbox" - it doesn't actually render the robot useless, but rather just stops the sandbox, usually caused by external things like digilines
+
+"limit" - The sandbox has a time/memory limit
 
 # Environment (the stuffs you get to play with)
 
-Has the [standard libox environment](https://github.com/TheEt1234/libox/blob/master/env_docs.md) with additions, those additions are described here
+Has the [standard libox environment](https://github.com/TheEt1234/libox/blob/master/env_docs.md) with additions, those additions are described here (this alone means that you can make a custom editor, and fix all of your issues)
 
 # `event = yield(command)`
 
@@ -14,7 +54,7 @@ Has the [standard libox environment](https://github.com/TheEt1234/libox/blob/mas
 it waits for an event and returns it
 
 
-## Waiting
+## Waiting *for a time*
 
 
 `yield(1)`  
