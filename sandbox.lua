@@ -347,7 +347,7 @@ function api.create_sandbox(pos) -- position, not meta, because create_environme
         is_garbage_collected = true,
         env = env,
         time_limit = settings.time_limit,
-        hook_time = 50,
+        hook_time = 50, -- see libox_controller for the reasoning behind why this is 50
         size_limit = settings.size_limit,
     })
 

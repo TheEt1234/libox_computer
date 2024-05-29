@@ -42,6 +42,11 @@ tl;dr you can *pause* the sandbox*, then it starts again, and that is the way yo
 
 "limit" - The sandbox has a time/memory limit
 
+# What is the libox programmer tool?
+- If you left click a laptop/robot with it, it will return to regular ui
+- If you shift+right click a laptop/robot with it, it will stop the sandbox and return to the regular ui
+- Useful if you are working with the gui function
+
 # Environment (the stuffs you get to play with)
 
 Has the [standard libox environment](https://github.com/TheEt1234/libox/blob/master/env_docs.md) with additions, those additions are described here (this alone means that you can make a custom editor, and fix all of your issues)
@@ -304,3 +309,6 @@ The `pos` argument of theese functions is relative
 - you can disable it if it isn't right for your world
 - You can set a setting that will force the world modifying functions to wait more
 - The `dig_node` function will *always* wait the amount of time the tool takes to destroy the node, keep that in mind *when limiting the other actions..., so don't make placing take 2x more as digging... :>*.. but no please nobody wants to wait painfully long amounts of time....
+
+# Do you have suggestions?
+please let me know

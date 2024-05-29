@@ -3,6 +3,7 @@
 A mod offering
 - Libox laptop
   - A sort of... luacontroller i guess you could say... with a digistuff touchscreen on top
+  - Inspired by the lwcomputers mod, `but without the horrible text inputting` and filesystem stuff, you can code that stuff
 - Libox robot
   - Like the libox laptop, but has an inventory and can interract with the world
 
@@ -33,7 +34,7 @@ A mod offering
 - wrench: You can pick it up with a wrench
 - pipeworks: Robot uses pipeworks for inventory automation (receiving/sending items)
 
-### This mod uses a lot of code from other mods, see [LICENSE.md](https://github.com/TheEt1234/libox_computer/blob/master/LICENSE.md)
+### This mod uses code from other mods, see [LICENSE.md](https://github.com/TheEt1234/libox_computer/blob/master/LICENSE.md)
 
 
 # Todos (not in order)
@@ -49,7 +50,7 @@ A mod offering
 
 # What wont be happening
 - mesecon interraction: i feel like it would be too complicated to rewrite the code to support that at this point
-- setfenv/getfenv: i am afraid of messing that up... like that could lead to some actual full minetest control
+- setfenv/getfenv: i am afraid of messing that up... like that could lead to some actual full minetest server control
 - metatables: you can hide values inside them, oh and `getmetatable()` is not that fast so weighing things would be slow *(needs to be verified actually)*, and also i just feel like they can be used to do some nasty stuff
 
 # What to report as a bug
@@ -57,3 +58,9 @@ A mod offering
 - If it's not covered in the common troubleshooting page and feels un-intended or abusable, then please report it as a bug
 - If you can hide some data inside userdata, ***it's a bug***
     - if you obtain userdata that you can write unlimited data to directly, it's probably a bug
+
+# Things open to discussion
+- The crafing recipe **CURRENTLY LACKS A CRAFTING RECIPE**
+- The defaults
+- The looks
+- ok really anything...

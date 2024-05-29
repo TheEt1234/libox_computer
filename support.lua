@@ -57,7 +57,7 @@ if minetest.global_exists("wrench") then
     }
 
     def_robot.description = function()
-        return S("Robot with code")
+        return S("Robot with stuff")
     end
 
     wrench.register_node(libox_computer.basename_robot, def_robot)
