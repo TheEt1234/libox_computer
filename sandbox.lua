@@ -70,12 +70,7 @@ function api.create_laptop_environment(pos)
         code = meta:get_string("code"),
         mem = mem,
 
-        coroutine = {
-            create = coroutine.create,
-            resume = libox_computer.safe_coroutine_resume,
-            status = coroutine.status,
-            yield = coroutine.yield,
-        },
+
     }
     for k, v in pairs(add) do base[k] = v end
     return base
@@ -188,12 +183,6 @@ function api.create_robot_environment(pos)
         code = meta:get_string("code"),
         mem = mem,
 
-        coroutine = {
-            create = coroutine.create,
-            resume = libox_computer.safe_coroutine_resume,
-            status = coroutine.status,
-            yield = coroutine.yield,
-        },
         -- inventory/pipeworks related
         -- we CANNOT let the user access the ItemStack and MetaRef userdata because its like almost impossible to weigh unless using special logic
         inv = {

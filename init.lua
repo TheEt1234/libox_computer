@@ -17,7 +17,7 @@ libox_computer = {
         ["libox_computer:robot"] = true,
     },
     settings = {
-        time_limit = tonumber(settings:get("libox_computer_time_limit")) or 3000, -- 3 miliseconds
+        time_limit = tonumber(settings:get("libox_computer_time_limit")) or 5000, -- 5 miliseconds
         min_delay = 1 / (mesecon.setting("overheat_max", 20) - 2),
         size_limit = (1024 * 1024 * 10),                                          -- 10 *megabytes*
         chan_maxlen = 256,
@@ -30,7 +30,8 @@ libox_computer = {
         range = tonumber(settings:get("libox_computer_range")) or 3,
         set_node_delay = tonumber(settings:get("libox_computer_set_node_delay")) or 0.1,
         allow_robots = get_bool_setting_or_default("libox_computer_allow_robots", true)
-    }
+    },
+    hook_time = 50
 }
 
 if tonumber(settings:get("libox_computer_size_limit")) then
@@ -39,7 +40,7 @@ end
 
 if not minetest.global_exists("jit") then
     minetest.log("warn",
-        "[libox_computer] Minetest not compiled with luajit, libox_computer with PUC lua is not officially supported")
+        "[libox_computer] Minetest not compiled with luajit, libox_computer with PUC lua is not officially supported and may cause unintended behaviour")
 end
 
 

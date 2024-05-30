@@ -52,16 +52,3 @@ end
 function libox_computer.get_clearterm(meta)
     return function() meta:set_string("term_text", "") end
 end
-
-function libox_computer.safe_coroutine_resume(co, ...)
-    --[[
-        Can't use libox.sandbox_lib_f on this because it runs user code
-    ]]
-    local retvalues = {
-        coroutine.resume(co, ...)
-    }
-    if not debug.gethook() then
-        error("Code timed out! (from coroutine.resume)", 2)
-    end
-    return unpack(retvalues)
-end
