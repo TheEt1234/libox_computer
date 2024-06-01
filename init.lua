@@ -17,7 +17,7 @@ libox_computer = {
         ["libox_computer:robot"] = true,
     },
     settings = {
-        time_limit = tonumber(settings:get("libox_computer_time_limit")) or 3000, -- 3 miliseconds
+        time_limit = tonumber(settings:get("libox_computer_time_limit")) or 5000, -- 5 miliseconds
         min_delay = 1 / (mesecon.setting("overheat_max", 20) - 2),
         size_limit = (1024 * 1024 * 10),                                          -- 10 *megabytes*
         chan_maxlen = 256,

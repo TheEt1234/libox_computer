@@ -53,18 +53,25 @@ function libox_computer.get_clearterm(meta)
     return function() meta:set_string("term_text", "") end
 end
 
-function libox_computer.safe_coroutine_resume(co, ...)
-    --[[
+if rawget(_G, "jit") then
+    function libox_computer.safe_coroutine_resume(co, ...)
+        --[[
         Can't use libox.sandbox_lib_f on this because it runs user code
     ]]
-    local retvalues = {
-        coroutine.resume(co, ...)
-    }
-    if not debug.gethook() then
-        error("Code timed out! (from coroutine.resume)", 2)
+        local retvalues = {
+            coroutine.resume(co, ...)
+        }
+        if not debug.gethook() then
+            error("Code timed out! (from coroutine.resume)", 2)
+        end
+        if type(retvalues[2]) == "table" and retvalues[2].type then
+            return coroutine.yield(retvalues[2])
+        end
+        return unpack(retvalues)
     end
-    if retvalues.type then
-        return coroutine.yield(retvalues) -- lol just yield
+else
+    function libox_computer.safe_coroutine_resume(...)
+        error(
+            "It might be dangerous to do this in non-jit lua because of the differences in how debug hooks work (for example luajit doesn't have per-coroutine hooks... strange, but yeah you could nuke the server)")
     end
-    return unpack(retvalues)
 end
