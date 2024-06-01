@@ -48,7 +48,7 @@ if minetest.global_exists("wrench") then
         tab = wrench.META_TYPE_INT,
         code = wrench.META_TYPE_STRING,
 
-        robot = wrench.META_TYPE_INT, -- just a constant "1" lol
+        robot = wrench.META_TYPE_INT, -- just a constant 1 lol
         owner = wrench.META_TYPE_STRING,
 
     }
