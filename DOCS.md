@@ -204,11 +204,6 @@ if you `yield()` you can receive the `terminal` event, where `msg` is the messag
 
 `mem` - persistant storage (across sandbox restarts/server restarts/whatever), cannot store threads, functions or userdata
 
-# Coroutine library (coroutine.*)
-- create - unchanged
-- resume - Changed in the style of libox pcall (so cant nuke the hook), **and also unavaliable in normal lua (throws error)** (so only avaliable in luajit)
-- yield - unchanged, same yield as in _G
-
 
 # ROBOT
 
