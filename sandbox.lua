@@ -70,12 +70,6 @@ function api.create_laptop_environment(pos)
         code = meta:get_string("code"),
         mem = mem,
 
-        coroutine = {
-            create = coroutine.create,
-            resume = libox_computer.safe_coroutine_resume,
-            status = coroutine.status,
-            yield = coroutine.yield,
-        },
     }
     for k, v in pairs(add) do base[k] = v end
     return base
@@ -188,14 +182,8 @@ function api.create_robot_environment(pos)
         code = meta:get_string("code"),
         mem = mem,
 
-        coroutine = {
-            create = coroutine.create,
-            resume = libox_computer.safe_coroutine_resume,
-            status = coroutine.status,
-            yield = coroutine.yield,
-        },
         -- inventory/pipeworks related
-        -- we CANNOT let the user access the ItemStack and MetaRef userdata because its like almost impossible to weigh unless using special logic
+        -- we CANNOT let the user access the ItemStack and MetaRef userdata because its like almost impossible to weigh unless using c i think
         inv = {
             is_empty = libf(curry(inv.is_empty, inv, "main")),
             get_size = libf(curry(inv.get_size, inv, "main")),
@@ -214,18 +202,6 @@ function api.create_robot_environment(pos)
             end)
         },
         move = function(rpos)
-            --[[
-                Problem: Yield logic can't handle our shenanigans (fair)
-                so we need to somehow inform the system that the position of the node has been changed
-                ummmmm
-                OH RIGHT I HAVE AN IDEA
-                yield({
-                    type = "move",
-                    rpos = {vector}
-                })
-
-                and this simply being an alias
-            ]]
             return coroutine.yield({
                 type = "move",
                 rpos = rpos,
@@ -403,6 +379,7 @@ function api.save_mem(meta, mem)
 end
 
 local yield_logic_funcs = {}
+api.yield_logic_funcs = yield_logic_funcs -- expose it for mods
 
 yield_logic_funcs.stop = {
     types = {},
@@ -476,6 +453,8 @@ yield_logic_funcs.move = {
     end
 }
 
+
+
 local function yield_logic(pos, meta, args)
     local id = meta:get_string("ID")
     if type(args) == "number" then
@@ -494,6 +473,7 @@ local function yield_logic(pos, meta, args)
     if yield_f == nil then
         return -- await
     end
+
     for k, v in pairs(yield_f.types) do
         if type(v) == 'function' then
             if v(args[k]) == false then

@@ -2,7 +2,6 @@ if not minetest.global_exists("fakelib") then
     return false
 end
 
-
 local settings = libox_computer.settings
 local function validate_and_return_position(pos)
     local is_vec = fakelib.is_vector(pos, true)

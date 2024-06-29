@@ -6,6 +6,8 @@ function really_expensive_function()
     for i=1,1000 do
         if i%100 == 0 then
             _event = yield(0) -- wait the minimum amount of time allowed
+            -- _event is a useless wait event
+            -- the sandbox pauses for a small amount of time
         end
     end
     return ":D"
@@ -29,64 +31,54 @@ luaJIT claims to be fully resumable
 
 But Normal lua might not be... **libox_computer has not been tested with minetest's lua, thus not officially supported**
 
-# So basically,
-
-tl;dr you can *pause* the sandbox*, then it starts again, and that is the way you get events
+TL;DR you can *pause* the sandbox using the `yield` function, then it starts again, and that is the way you get events (`event = yield()`)
  
 
 ## Definitions
 
 "waking up the sandbox" - sandbox will get created, this has a limit of 5 seconds by default, the `program` button bypasses it
 
-"overheat the sandbox" - it doesn't actually render the robot useless, but rather just stops the sandbox, usually caused by external things like digilines
+"overheat the sandbox" - it doesn't actually render the robot completely useless (like in normal luacontrollers), but rather just stops the sandbox, usually caused by external things like digilines, and rarely yield waiting
 
 "limit" - The sandbox has a time/memory limit
 
-"digistuff" - i am not refering to abadoned chiepie's (the one that's on contentDB) digistuff here, i am referring to the mt-mods's fork of digistuff, that you can find [here](https://github.com/mt-mods/digistuff), but it is backwards compatible
+"digistuff" - i am not refering to abadoned chiepie's (the one that's on contentDB) digistuff here, i am referring to the mt-mods's fork of digistuff, that you can find [here](https://github.com/mt-mods/digistuff)
 
 # What is the libox programmer tool?
 - If you left click a laptop/robot with it, it will return to regular ui
 - If you shift+right click a laptop/robot with it, it will stop the sandbox and return to the regular ui
-- Useful if you are working with the gui function
+- Useful if you are working with the `gui` function
 
 # Environment (the stuffs you get to play with)
 
-Has the [standard libox environment](https://github.com/TheEt1234/libox/blob/master/env_docs.md) with additions, those additions are described here (this alone means that you can make a custom editor, and fix all of your issues)
+Has the [standard libox environment](https://github.com/TheEt1234/libox/blob/master/env_docs.md) with additions, those additions are described here
 
-# `event = yield(command)`
-
-## Waiting *for an event*
-
-`event = yield()`  
-it waits for an event and returns it
+# More into the yield function...
 
 
-## Waiting *for a time*
+**`event = yield()`**  
+- it waits for an event and returns it
 
+<hr>
 
-`yield(1)`  
+**`yield(n)`**  
 ```lua
 yield({
     type = "wait",
-    time = 1
+    time = n
 })
 ```  
-both of those examples wait 1 second
+- Pauses the sandbox for  `n` amount of seconds
 
-When waiting, your code gets paused for the amount of seconds you've specified, and **all events get ignored**. After that period passes the code will resume with a `wait` event
+- **all events get ignored**
 
-The `wait` event looks like this:
-```lua
-{
-    type = "wait"
-}
-```
+- The event returned is just a table that looks like: `{ type = "wait" }`
 
-The limit on yielding is `1 / (heat_max - 2)`, meaning that your `yield(0)` will get converted to `yield(1 / (heat_max - 2))`
+- The lower limit on yielding is `1 / (heat_max - 2)`
 
-Also, the waiting is done using mesecon queue, not node timers
+- The waiting is done using mesecon queue, not node timers
 
-## Awaiting
+<hr>
 
 ```lua
 event = yield({
@@ -94,19 +86,13 @@ event = yield({
     time = 0
 })
 ```
+- identical to the `wait` command, but **doesn't ignore events**
+- Event returned is a `wait` event, or a normal event
 
-almost identical to the yield wait command, **but instead of ignoring events, it takes them into account**, functions somewhat like the luacontroller's `interrupt` function
+<hr>
 
-## Stopping
-
-```lua
-    yield({
-        type = "stop"
-    })
-    yield("stop") -- same thing
-```
-
-it stops the sandbox...
+**`yield(stop)`**
+- it *stops* the sandbox...
 
 # The events returned
 
@@ -144,27 +130,31 @@ Happens when someone clicks send in the terminal tab, looks something like this:
 ```lua
     {
         type = "terminal",
-        msg = "Any message, can even contain new lines actually"
+        msg = "Any message, can even contain new lines actually but don't rely on that"
     }
 ```
 
 # Now some functions
 
-# `gui(touchscreen_message)`
+## `gui(touchscreen_message)`
 - see the [touchscreen protocol docs](https://github.com/mt-mods/digistuff/blob/master/docs/touchscreen.md)
+- but there were some things added to the touchscreen protocol to make it better for robots
 
-## Things that were added:
-#### Formspecs
+##### **Additions:**
+
+**Formspecs**
+
 ```lua
     gui({
         command = "formspec",
         text = "label[0,0;hello]"
     })
 ```
-Adds the specified formspec to the gui  
+- Adds the specified formspec to the gui  
 see [formspec docs](https://api.minetest.net/formspec/) if you have no idea what you just saw in that `text` field  
 
-#### Lists
+**Lists**
+
 ```lua
 gui({
     command = "add",
@@ -176,7 +166,7 @@ gui({
 })
 ```
 
-Adds a list to the gui
+- Adds a list to the gui
 - location: See [minetest docs](https://api.minetest.net/inventory/#inventory-locations) for info on inventory locations
 - name: *not* the elemt name, but it is the name of the inventory, `main` is also the name of the robot's chest inventory
 - W,H are in item size, not real size
@@ -195,12 +185,12 @@ You have:
 
 if you `yield()` you can receive the `terminal` event, where `msg` is the message sent to the terminal
 
-# color_laptop(n) and color_robot(n)
+# `color_laptop(n)` and `color_robot(n)`
 
 - returns false if unsuccessful
 - `n`, in the case of a **laptop**, is a number above 0, and less than 64
 - `n`, in the case of a **robot**, is a number above 0, and less than 8
-- it colors the laptop based on the number
+- it colors the robot/laptop based on the number
 - The colors are based off of the pallete defined in `textures/laptop_palette.png` and `textures/robot_palette.png`
 
 # Other stuff (the things you are used to)
@@ -216,7 +206,7 @@ if you `yield()` you can receive the `terminal` event, where `msg` is the messag
 
 # Coroutine library (coroutine.*)
 - create - unchanged
-- resume - Changed in the style of libox pcall (so cant nuke the hook), **and if the return value has a .type then it will yield**
+- resume - Changed in the style of libox pcall (so cant nuke the hook), **and also unavaliable in normal lua (throws error)** (so only avaliable in luajit)
 - yield - unchanged, same yield as in _G
 
 
@@ -242,13 +232,12 @@ Please see [InvRef docs](https://api.minetest.net/class-reference/#invref), even
 
 
 - `inv.lock()` = locks the inventory
-- `inv.unlock()` = unlocks the inventory, by default the inventory is unlocked, *please lock your inventory if you have something going on there, if you don't, even if no inventory list is visible you can still get robbed*
+- `inv.unlock()` = unlocks the inventory, by default the inventory is unlocked, ***please lock your inventory if you have something going on there, if you don't, even if no inventory list is visible you can still get robbed***
 
 # Pipeworks support 
 - Robot is allowed to take the items if pipeworks is avaliable
 
-### Injecting items
-inject_item(item, rpos)
+**`inject_item(item, rpos)`**  
 - item, if a number will point to the index in the inventory
 - item, if a string or a table, will *go thru all the slots* and attempt to find an item with the same name
 
@@ -266,6 +255,7 @@ Theese are the tables you can insert when something says it has an *rpos* argume
         { x = 0,  y = 0,  z = 1 }
         { x = 0,  y = 0,  z = -1 }
 ```
+
 # Moving
 ## `move(rpos)`
 -  rpos, is a vector that indicates the relative coordinates of where the robot will move, by default `{ x = 0, y = 1, z = 0 }` see Valid rposes
@@ -299,19 +289,9 @@ By default they wait 0.1 seconds, can be changed with the place/drop delay setti
 The `pos` argument of theese functions is relative
 
 - `place(pos, name[, def])` - def is optional, places an item/node at that relative position, `def` contains `param2` and `up` or `down` or `west` or `east` or `auto`
-- `dig(pos, name)` - digs a node with a tool (the tool's name is in... name), does not wear out the tool, ***IGNORES THE SETTING, INSTEAD WAITING THE AMOUNT OF TIME IT TAKES TO BREAK THE NODE***
+- `dig(pos, tool_name)` - digs a node with a tool, does not wear out the tool, ignores the place/drop setting, instead it waits the time it takes to break the node with the tool
 - `drop(pos, name)` - drops a node
 
-# Addressing some of robot's concerns
-
-## If you are worried about lag:
-
-- all the functions get accounted for their lag, so it respects the limit
-
-## If you are worried about balance:
-- you can disable it if it isn't right for your world
-- You can set a setting that will force the world modifying functions to wait more
-- The `dig_node` function will *always* wait the amount of time the tool takes to destroy the node, keep that in mind *when limiting the other actions..., so don't make placing take 2x more as digging... :>*.. but no please nobody wants to wait painfully long amounts of time....
 
 # Do you have suggestions?
 please let me know

@@ -40,7 +40,7 @@ local digiline = {
     effector = {
         action = function(pos, _, channel, msg)
             msg = libox.digiline_sanitize(msg, libox_computer.settings.allow_functions_in_digiline_messages,
-                libox_computer.wrap)
+                libox_computer.digiline_wrap)
             libox_computer.sandbox.wake_up_and_run(pos, {
                 type = "digiline",
                 channel = channel,
