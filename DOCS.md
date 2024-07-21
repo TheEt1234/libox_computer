@@ -29,7 +29,7 @@ This is how you do events actually...
 luaJIT claims to be fully resumable  
 "The LuaJIT VM is fully resumable. This means you can yield from a coroutine even across contexts, where this would not possible with the standard Lua 5.1 VM: e.g. you can yield across pcall() and xpcall(), across iterators and across metamethods. " - https://luajit.org/extensions.html
 
-But Normal lua might not be... **libox_computer has not been tested with minetest's lua, thus not officially supported**
+But Normal lua might not be... **libox_computer has not been tested with a minetest non-luajit build, thus not officially supported**
 
 TL;DR you can *pause* the sandbox using the `yield` function, then it starts again, and that is the way you get events (`event = yield()`)
  

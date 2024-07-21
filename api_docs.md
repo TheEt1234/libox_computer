@@ -14,7 +14,7 @@ All the guts of the mod are located inside the `libox_computer` table
 **libox_computer.settings** - a table for the settings
 
 # Touchscreen protocol
-Guts in `libox_computer.touchscreen_protocol`, i am not gonna document them, they aren't alll used
+Guts in `libox_computer.touchscreen_protocol`, i am not gonna document them, they aren't all used, just some are
 
 # Utilities - a fancy name for *random stuff*
 - **libox_computer.digiline_wrap(f)** - remove the environment of the function, used when sending/receiving digilines messages (to not allow funky communication), id say dont use this in your mod as i may change my mind about this if i dont find any exploits

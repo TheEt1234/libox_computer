@@ -41,7 +41,9 @@ A mod offering
 - If you can hide some data inside userdata, ***it's a bug***
 
 # Things open to discussion
+
 - The crafing recipe **CURRENTLY LACKS A CRAFTING RECIPE**
 - The defaults
 - The looks
-- ok really anything...
+- The features
+- *ok really anything actually...*
