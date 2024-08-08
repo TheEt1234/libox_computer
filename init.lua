@@ -12,10 +12,6 @@ end
 libox_computer = {
     basename_laptop = "libox_computer:laptop",
     basename_robot = "libox_computer:robot",
-    is_from_mod = {
-        ["libox_computer:laptop"] = true,
-        ["libox_computer:robot"] = true,
-    },
     settings = {
         time_limit = tonumber(settings:get("libox_computer_time_limit")) or 5000, -- 5 miliseconds
         min_delay = 1 / (mesecon.setting("overheat_max", 20) - 2),

@@ -10,7 +10,6 @@ All the guts of the mod are located inside the `libox_computer` table
 
 **libox_computer.basename_laptop** - the name of the laptop node  
 **libox_computer.basename_robot** - the name of the robot node  
-**libox_computer.is_from_mod** - a lookup table for the laptop tool to identify what it can touch  
 **libox_computer.settings** - a table for the settings
 
 # Touchscreen protocol
