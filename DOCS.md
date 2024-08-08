@@ -3,8 +3,8 @@
 You can stop the sandbox at any time, that means if you run this code:
 ```lua
 function really_expensive_function()
-    for i=1,1000 do
-        if i%100 == 0 then
+    for i=1,10000 do
+        if i%1000 == 0 then
             _event = yield(0) -- wait the minimum amount of time allowed
             -- _event is a useless wait event
             -- the sandbox pauses for a small amount of time
@@ -18,10 +18,10 @@ You will get a `:D` in the terminal
 
 This is how you do events actually...
 ```lua
-    while true do
-        event = yield() -- when ran without arguments, it will wait for an event, then return it
-        ....your code stuff
-    end
+while true do
+    event = yield() -- when ran without arguments, it will wait for an event, then return it
+    ....your code stuff
+end
 ```
 
 ### also we get a yucky with a JIT vs PUC lua difference...
@@ -44,10 +44,8 @@ TL;DR you can *pause* the sandbox using the `yield` function, then it starts aga
 
 "digistuff" - i am not refering to abadoned chiepie's (the one that's on contentDB) digistuff here, i am referring to the mt-mods's fork of digistuff, that you can find [here](https://github.com/mt-mods/digistuff)
 
-# What is the libox programmer tool?
-- If you left click a laptop/robot with it, it will return to regular ui
-- If you shift+right click a laptop/robot with it, it will stop the sandbox and return to the regular ui
-- Useful if you are working with the `gui` function
+# What does the libox computer tool do?
+- when you click it on a laptop/computer it turns it off forcefully
 
 # Environment (the stuffs you get to play with)
 
@@ -73,9 +71,7 @@ yield({
 - **all events get ignored**
 
 - The event returned is just a table that looks like: `{ type = "wait" }`
-
 - The lower limit on yielding is `1 / (heat_max - 2)`
-
 - The waiting is done using mesecon queue, not node timers
 
 <hr>
@@ -236,24 +232,26 @@ Please see [InvRef docs](https://api.minetest.net/class-reference/#invref), even
 - item, if a number will point to the index in the inventory
 - item, if a string or a table, will *go thru all the slots* and attempt to find an item with the same name
 
-- rpos, is a vector that indicates the relative coordinates of where the item will be injected in, by default `{ x = 0, y = 1, z = 0 }`, also indicates the velocity, see "Valid rposes" for more
-
-# Valid rposes
-
-Theese are the tables you can insert when something says it has an *rpos* argument
+# *what is that rpos argument*
+- its meant to be a direction
+- here are the valid tables that you can supply to it:
+- and yes the `directions` table is in your environment
 
 ```lua
-        { x = 1,  y = 0,  z = 0 }
-        { x = -1, y = 0,  z = 0 }
-        { x = 0,  y = 1,  z = 0 }
-        { x = 0,  y = -1, z = 0 }
-        { x = 0,  y = 0,  z = 1 }
-        { x = 0,  y = 0,  z = -1 }
+    _G.directions = {
+        EAST = { x = 1,  y = 0,  z = 0 },
+        WEST = { x = -1, y = 0,  z = 0 },
+
+        UP = { x = 0,  y = 1,  z = 0 },
+        DOWN = { x = 0,  y = -1, z = 0 },
+
+        NORTH = { x = 0,  y = 0,  z = 1 },
+        SOUTH = { x = 0,  y = 0,  z = -1 }
+    }
 ```
 
 # Moving
 ## `move(rpos)`
--  rpos, is a vector that indicates the relative coordinates of where the robot will move, by default `{ x = 0, y = 1, z = 0 }` see Valid rposes
 
 Also you can do this too with:
 ```lua

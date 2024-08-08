@@ -50,8 +50,8 @@ if minetest.global_exists("wrench") then
 
         robot = wrench.META_TYPE_INT, -- just a constant 1 lol
         owner = wrench.META_TYPE_STRING,
-
     }
+
     def_robot.lists = {
         "main"
     }

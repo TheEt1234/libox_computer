@@ -69,7 +69,6 @@ function api.create_laptop_environment(pos)
 
         code = meta:get_string("code"),
         mem = mem,
-
     }
     for k, v in pairs(add) do base[k] = v end
     return base
@@ -93,18 +92,12 @@ local function curry(f, ...)
 end
 
 
-local function get_safe_ItemStack(f)
+local function itemstack2table(f)
     return function(...)
         local x = f(...)
-
-        if type(x) ~= "userdata" and type(x) ~= "table"
-            and type(x) ~= "string"
-            and x ~= nil then
-            return "sorry couldnt get the stack"
+        if type(x) == "userdata" and x.to_table then
+            return x:to_table()
         end
-
-        local core = ItemStack(x)
-        return core:to_table()
     end
 end
 
@@ -160,8 +153,8 @@ function api.create_robot_environment(pos)
     local base = libox.create_basic_environment()
     local meta = minetest.get_meta(pos)
     local inv = meta:get_inventory()
-    local owner = meta:get_string("owner") or ""
-    local mem = minetest.deserialize(meta:get_string("mem") or "") or {}
+    local owner = meta:get_string("owner")
+    local mem = minetest.deserialize(meta:get_string("mem")) or {}
     meta:set_string("term_text", "")
 
     local add = {
@@ -174,10 +167,17 @@ function api.create_robot_environment(pos)
         heat = mesecon.get_heat(pos),
         heat_max = settings.heat_max,
         color_robot = libf(get_color_robot(pos)),
+        directions = {
+            DOWN = { x = 0, y = -1, z = 0 },
+            UP = { x = 0, y = 1, z = 0 },
 
-        gui = libf(
-            libox_computer.touchscreen_protocol.get_touchscreen_ui(meta)
-        ),
+            NORTH = { x = 0, y = 0, z = 1 },
+            SOUTH = { x = 0, y = 0, z = -1 },
+            WEST = { x = -1, y = 0, z = 0 },
+            EAST = { x = 1, y = 0, z = 0 },
+        },
+
+        gui = libf(libox_computer.touchscreen_protocol.get_touchscreen_ui(meta)),
 
         code = meta:get_string("code"),
         mem = mem,
@@ -187,7 +187,7 @@ function api.create_robot_environment(pos)
         inv = {
             is_empty = libf(curry(inv.is_empty, inv, "main")),
             get_size = libf(curry(inv.get_size, inv, "main")),
-            get_stack = libf(get_safe_ItemStack(
+            get_stack = libf(itemstack2table(
                 curry(inv.get_stack, inv, "main")
             )),
             get_list = libf(convert_to_safe_itemstacks(curry(inv.get_list, inv, "main"))),
@@ -212,38 +212,29 @@ function api.create_robot_environment(pos)
 
     if minetest.global_exists("pipeworks") then
         add.inject_item = libf(function(item, rpos)
-            --[[
-                PROBLEM:
-                we need PROOF of the item's existance
-
-                Also rpos is the relative pos
-                sort of like a lazy version of the luatube port
-            ]]
             if rpos == nil then rpos = { x = 0, y = 1, z = 0 } end
-            if not is_valid_rpos(rpos) then return "rpos isn't valid, do something like { x = 0, y = 1, z = 0 }" end
+            if not is_valid_rpos(rpos) then return "direction isn't valid" end
             rpos = vector.new(rpos.x, rpos.y, rpos.z)
 
             local stack
             if type(item) == "number" then
-                -- we see the index
                 stack = inv:get_stack("main", item)
 
                 if stack == nil then
-                    return "(Treating item param as index) Pointed to nothing."
+                    return "(Treating the item parameter as index) Pointed to nothing."
                 end
 
                 if stack:is_empty() then
-                    return "(Treating item param as index) Pointed to empty stack."
+                    return "(Treating item parameter as index) Pointed to empty stack."
                 end
 
                 -- delete the item
                 inv:set_stack("main", item, ItemStack(""))
             elseif type(item) == "table" or type(item) == "string" then
-                -- in this case, we need to search for the itemstack in the list to prove its existance
-
+                -- item stack is a name not an index now
                 stack = ItemStack(item)
 
-                if stack:get_count() > stack:get_stack_max() then -- cant have fun happen
+                if stack:get_count() > stack:get_stack_max() then -- no
                     stack:set_count(stack:get_stack_max())
                 end
 
@@ -259,7 +250,7 @@ function api.create_robot_environment(pos)
                 end
 
                 if not found_stack then
-                    return "Didn't find that item stack"
+                    return "Couldn't find that item stack"
                 else
                     stack = found_stack
                 end
@@ -272,9 +263,6 @@ function api.create_robot_environment(pos)
     end
     if minetest.global_exists("fakelib") then
         add.node = {
-            --[[
-                Assumbtion: all the positions in here are relative
-            ]]
             is_protected = libf(function(rpos, who)
                 if who == nil then who = owner end
                 if not is_vector_within_range(rpos) then
@@ -292,7 +280,6 @@ function api.create_robot_environment(pos)
             place = libf(libox_computer.get_place(pos, inv, owner)),
             dig = libf(libox_computer.get_break(pos, inv, owner)),
             drop = libf(libox_computer.get_drop(pos, inv, owner)),
-
         }
     end
     for k, v in pairs(add) do base[k] = v end
@@ -323,7 +310,6 @@ function api.create_sandbox(pos) -- position, not meta, because create_environme
         is_garbage_collected = true,
         env = env,
         time_limit = settings.time_limit,
-        hook_time = 50, -- see libox_controller for the reasoning behind why this is 50
         size_limit = settings.size_limit,
     })
 
@@ -570,9 +556,8 @@ mesecon.queue:add_function("lb_await", function(pos, id)
         type = "await"
     })
 end)
-mesecon.queue:add_function("lb_digiline_relay",
-    function(pos, channel, msg)
-        digilines.receptor_send(pos, digilines.rules.default, channel, msg)
-    end)
+mesecon.queue:add_function("lb_digiline_relay", function(pos, channel, msg)
+    digilines.receptor_send(pos, digilines.rules.default, channel, msg)
+end)
 
 libox_computer.sandbox = api
