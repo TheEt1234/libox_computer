@@ -73,7 +73,7 @@ so i am crap at explaining things so here have an example:
 - `local f = libox_computer.get_drop(robot_pos, inv, owner)`
 
 # the frontend
-- `ui(meta)`
-- `on_receive_fields(pos, _, fields, sender)`
+- `libox_computer.ui(meta)`
+- `libox_computer.on_receive_fields(pos, _, fields, sender)`
 
 # i think thats all thats relevant :D
